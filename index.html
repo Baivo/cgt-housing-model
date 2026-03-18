@@ -12,7 +12,7 @@
 
 <header>
   <div class="container">
-    <span class="badge">Interactive Policy Model v2</span>
+    <span class="badge">Interactive Policy Model</span>
     <h1>Capital Gains Tax Discount: Impact on Housing Availability for First Home Buyers</h1>
     <p class="subtitle">
       Explore how varying Australia's 50% CGT discount and negative gearing policy affects dwelling prices,
@@ -219,7 +219,7 @@
 
     <div class="chart-card">
       <h3>First Home Buyer Affordability</h3>
-      <p class="chart-desc">Deposit, stamp duty, and total upfront costs across the CGT discount range. Now includes state-specific stamp duty with FHB exemptions. Years to save assumes $40K/year.</p>
+      <p class="chart-desc">Deposit, stamp duty, and total upfront costs across the CGT discount range. Includes state-specific stamp duty with FHB exemptions.</p>
       <div class="chart-wrap">
         <canvas id="affordChart"></canvas>
       </div>
@@ -302,8 +302,8 @@
 
       <h4>Non-Linear CGT &times; Negative Gearing Interaction</h4>
       <p>
-        <strong>v2 improvement:</strong> The model now uses a <strong>multiplicative interaction</strong> between CGT
-        and negative gearing, replacing the v1 additive approximation. The reasoning: when the CGT discount is high (50%),
+        The model uses a <strong>multiplicative interaction</strong> between CGT
+        and negative gearing. When the CGT discount is high (50%),
         investors rely heavily on negative gearing to fund holding costs while waiting for tax-advantaged capital gains.
         Removing NG at full CGT discount has maximum effect. When CGT discount is already reduced, capital gains
         strategies are less attractive, so removing NG has a smaller incremental effect.
@@ -312,15 +312,15 @@
 
       <h4>Stamp Duty Calculation</h4>
       <p>
-        <strong>v2 addition:</strong> State-specific stamp duty is now calculated using simplified graduated rate
+        State-specific stamp duty is calculated using simplified graduated rate
         schedules from each state's revenue office. First home buyer exemptions and concessions are applied where
-        applicable. This shows users the <strong>total upfront cost</strong> (deposit + stamp duty) rather than
+        applicable. This shows the <strong>total upfront cost</strong> (deposit + stamp duty) rather than
         deposit alone, giving a more realistic picture of barriers to entry.
       </p>
 
       <h4>Interest Rate Sensitivity</h4>
       <p>
-        <strong>v2 addition:</strong> Users can now vary the mortgage interest rate (3.5% to 8.5%) to see how
+        Users can vary the mortgage interest rate (3.5% to 8.5%) to see how
         rate changes interact with price changes. Monthly mortgage payments and income needed for serviceability
         (at 30% of income) update in real time. The RBA cash rate is 3.85% as of February 2026, with typical
         variable mortgage rates around 6.0-6.5%.
@@ -328,7 +328,7 @@
 
       <h4>Supply-Side Impact</h4>
       <p>
-        <strong>v2 addition:</strong> The model now estimates the effect on new housing construction and rents,
+        The model estimates the effect on new housing construction and rents,
         calibrated to the Grattan Institute's estimate of approximately 10,000 fewer homes over 5 years (2,000/year)
         at a 25% discount level, with a rent impact of less than $1 per week. These are scaled linearly for other
         discount levels. The Grattan Institute notes this supply impact could be more than offset if even a small
@@ -337,10 +337,9 @@
 
       <h4>Phase-In Timeline</h4>
       <p>
-        <strong>v2 addition:</strong> Rather than showing only the steady-state outcome, the model now includes
-        a 5-year phase-in timeline based on the Grattan Institute's recommendation of gradual implementation rather
-        than grandfathering. This shows how price adjustments and FHB share changes would unfold over time, giving
-        a more realistic picture of the transition.
+        The model includes a 5-year phase-in timeline based on the Grattan Institute's recommendation of gradual
+        implementation rather than grandfathering. This shows how price adjustments and FHB share changes would
+        unfold over time, giving a more realistic picture of the transition.
       </p>
 
       <h4>Price Impact Calibration</h4>
@@ -424,20 +423,6 @@
         <li>Phase-in timeline assumes linear adjustment; actual market adjustment may be front-loaded or delayed</li>
       </ul>
 
-      <h4>Data Vintage</h4>
-      <p>
-        Different data points in this model come from different reference periods. Look for <span class="vintage-badge">vintage badges</span>
-        throughout the interface indicating the source period. Key vintages:
-      </p>
-      <ul>
-        <li>Dwelling prices: ABS, December Quarter 2025 (released March 2026)</li>
-        <li>Lending data: ABS, December Quarter 2025 (released February 2026)</li>
-        <li>CGT cost: Treasury TEIS, 2024-25</li>
-        <li>Tax statistics: ATO, 2022-23</li>
-        <li>Research estimates: Various, 2022-2025</li>
-        <li>Stamp duty rates: State revenue offices, March 2026</li>
-        <li>Interest rates: RBA, February 2026</li>
-      </ul>
     </div>
   </section>
 
@@ -599,74 +584,13 @@
     </div>
   </section>
 
-  <!-- ====== Improvements Log ====== -->
-  <section class="accordion">
-    <button class="accordion-toggle" data-target="improvementsContent" aria-expanded="false">
-      <span>What Changed in v2 (Limitations Addressed)</span>
-      <span class="accordion-icon">+</span>
-    </button>
-    <div class="accordion-content" id="improvementsContent">
-      <table class="data-table">
-        <thead>
-          <tr><th>v1 Limitation</th><th>v2 Improvement</th><th>Status</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Single point estimates only</td>
-            <td>Added low/central/high confidence bands showing range of institutional estimates (Grattan conservative to Treasury upper bound)</td>
-            <td>Addressed</td>
-          </tr>
-          <tr>
-            <td>CGT + NG additive approximation</td>
-            <td>Replaced with multiplicative interaction model where NG effect scales with CGT discount level</td>
-            <td>Addressed</td>
-          </tr>
-          <tr>
-            <td>No supply-side responses</td>
-            <td>Added construction impact and rent impact estimates calibrated to Grattan data (-2,000 homes/yr, &lt;$1/wk rent at 25% discount)</td>
-            <td>Partially addressed</td>
-          </tr>
-          <tr>
-            <td>No stamp duty</td>
-            <td>Added state-specific stamp duty calculations with FHB exemptions; shows total upfront cost</td>
-            <td>Addressed</td>
-          </tr>
-          <tr>
-            <td>No interest rate sensitivity</td>
-            <td>Added interest rate slider (3.5%-8.5%) showing mortgage payments and income needed at different rates</td>
-            <td>Addressed</td>
-          </tr>
-          <tr>
-            <td>Static model only</td>
-            <td>Added 5-year phase-in timeline chart based on Grattan's recommended gradual implementation</td>
-            <td>Partially addressed</td>
-          </tr>
-          <tr>
-            <td>Data from different years unclear</td>
-            <td>Added vintage badges throughout indicating the reference period for each data source</td>
-            <td>Addressed</td>
-          </tr>
-          <tr>
-            <td>City investor shares as estimates</td>
-            <td>Marked with confidence level; exact state breakdowns require ABS microdata not publicly available</td>
-            <td>Documented</td>
-          </tr>
-          <tr>
-            <td>No migration / population context</td>
-            <td>Added ABS migration data (NOM 306K), NHSAC housing demand (223K/yr), existing supply gap (46K/yr), and contextualisation showing CGT reform's construction impact as % of these demand drivers</td>
-            <td>Addressed</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
 
 </main>
 
 <footer>
   <div class="container">
     <p>
-      CGT Housing Impact Model v2 &mdash; Built with publicly available Australian government data.
+      Built with publicly available Australian government data.
       All data sources are linked above for independent verification.
     </p>
     <p style="margin-top: 0.5rem;">

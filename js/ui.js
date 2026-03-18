@@ -1,7 +1,5 @@
 /**
  * UI controller — wires controls to the model and charts.
- * v2: adds interest rate slider, stamp duty display, supply-side metrics,
- *     phase-in timeline, and confidence band indicators.
  */
 const UI = (() => {
   let currentDiscount = 50;

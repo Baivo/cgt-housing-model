@@ -1,13 +1,5 @@
 /**
  * Economic model engine for CGT discount impact on housing.
- *
- * Enhancements over v1:
- *  - Low/central/high confidence bands calibrated to range of published estimates
- *  - Multiplicative CGT × NG interaction (non-linear)
- *  - Supply-side impact estimates (construction + rent)
- *  - Stamp duty calculation per state with FHB exemptions
- *  - Interest rate sensitivity for mortgage serviceability
- *  - 5-year phase-in transition timeline
  */
 const Model = (() => {
 
