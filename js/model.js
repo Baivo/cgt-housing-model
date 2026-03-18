@@ -274,13 +274,9 @@ const Model = (() => {
     const constructionImpactAnnual = Math.round(discountReduction * CONSTRUCTION_RATE_PER_PP);
     const rentImpactWeekly = Math.round(discountReduction * RENT_RATE_PER_PP * 100) / 100;
 
-    // --- Migration context (dynamic based on user-adjusted NOM and household size) ---
-    const migrationDwellingDemand = Math.round(nom / householdSize);
-    const baseMigDemand = Math.round(
-      mig.netOverseasMigration.current / mig.housingDemand.averageHouseholdSize
-    );
-    const nonMigDemand = mig.housingDemand.totalAnnualDwellingDemand - baseMigDemand;
-    const totalDwellingDemand = nonMigDemand + migrationDwellingDemand;
+    // --- Migration context (reuses demand values computed in migration price section) ---
+    const migrationDwellingDemand = Math.round(userMigDemand);
+    const totalDwellingDemand = Math.round(userTotalDemand);
     const currentConstruction = mig.housingShortfall.annualConstruction2024;
     const existingGap = totalDwellingDemand - currentConstruction;
     const constructionAsPctOfGap = existingGap > 0
