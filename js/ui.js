@@ -8,6 +8,19 @@ const UI = (() => {
   let ngEnabled = true;
   let currentCity = 'national';
   let currentRate = 0.06;
+  let currentNom = 306000;
+  let currentHouseholdSize = 2.5;
+  let currentSavings = 40000;
+  let currentDepositPct = 0.20;
+
+  function getOverrides() {
+    return {
+      nom: currentNom,
+      householdSize: currentHouseholdSize,
+      annualSavings: currentSavings,
+      depositPct: currentDepositPct
+    };
+  }
 
   function formatCurrency(val) {
     return new Intl.NumberFormat('en-AU', {
@@ -107,25 +120,33 @@ const UI = (() => {
     // Migration context
     document.getElementById('metricMigDemand').textContent =
       result.migrationDwellingDemand.toLocaleString() + '/yr';
+    const migSub = document.getElementById('metricMigDemandSub');
+    if (migSub) {
+      migSub.textContent = `NOM ${(result.nom / 1000).toFixed(0)}K \u00F7 ${result.householdSize.toFixed(1)} ppd`;
+    }
 
     document.getElementById('metricSupplyGap').textContent =
       result.existingGap.toLocaleString() + '/yr';
-    document.getElementById('metricSupplyGap').className = 'metric-value negative';
+    document.getElementById('metricSupplyGap').className =
+      'metric-value ' + (result.existingGap > 0 ? 'negative' : 'positive');
 
     document.getElementById('metricCgtVsGap').textContent =
-      result.constructionAsPctOfGap.toFixed(1) + '%';
+      result.existingGap > 0 ? result.constructionAsPctOfGap.toFixed(1) + '%' : 'N/A';
     document.getElementById('metricCgtVsGapNote').textContent =
       result.constructionImpactAnnual === 0
         ? 'No CGT reform selected'
-        : `CGT reform impact (${Math.abs(result.constructionImpactAnnual).toLocaleString()} homes) is ${result.constructionAsPctOfGap.toFixed(1)}% of the existing ${result.existingGap.toLocaleString()}/yr supply gap`;
+        : result.existingGap > 0
+          ? `CGT reform impact (${Math.abs(result.constructionImpactAnnual).toLocaleString()} homes) is ${result.constructionAsPctOfGap.toFixed(1)}% of the ${result.existingGap.toLocaleString()}/yr supply gap`
+          : 'No supply gap at current settings';
   }
 
   function updateAll() {
-    const result = Model.compute(currentDiscount, ngEnabled, currentCity, currentRate);
-    const allCities = Model.computeAllCities(currentDiscount, ngEnabled, currentRate);
-    const sweepCurrent = Model.computeSweep(ngEnabled, currentCity, 5, currentRate);
-    const sweepNG = Model.computeSweep(true, currentCity, 5, currentRate);
-    const sweepNoNG = Model.computeSweep(false, currentCity, 5, currentRate);
+    const ov = getOverrides();
+    const result = Model.compute(currentDiscount, ngEnabled, currentCity, currentRate, ov);
+    const allCities = Model.computeAllCities(currentDiscount, ngEnabled, currentRate, ov);
+    const sweepCurrent = Model.computeSweep(ngEnabled, currentCity, 5, currentRate, ov);
+    const sweepNG = Model.computeSweep(true, currentCity, 5, currentRate, ov);
+    const sweepNoNG = Model.computeSweep(false, currentCity, 5, currentRate, ov);
 
     updateMetricCards(result);
     Charts.updatePriceChart(allCities);
@@ -143,6 +164,10 @@ const UI = (() => {
   }
 
   function buildSummary(r) {
+    const depPctLabel = Math.round(r.depositPctUsed * 100) + '%';
+    const savLabel = formatCurrency(r.annualSavingsUsed);
+    const nomLabel = (r.nom / 1000).toFixed(0) + 'K';
+
     const stampInfo = r.stampDutyNew.fhb > 0
       ? ` Stamp duty for a first home buyer would be ${formatCurrency(r.stampDutyNew.fhb)}, ` +
         `bringing total upfront costs to ${formatCurrency(r.totalUpfrontNew)}.`
@@ -151,10 +176,14 @@ const UI = (() => {
     if (r.cgtDiscount === 50 && r.ngEnabled) {
       return `<strong>Current policy:</strong> 50% CGT discount with negative gearing. ` +
         `The mean dwelling price in ${r.cityLabel} is ${formatCurrency(r.basePrice)}. ` +
-        `A 20% deposit requires ${formatCurrency(r.currentDeposit)}, taking approximately ` +
-        `${r.currentYearsToSave} years to save at $40,000/year.${stampInfo} ` +
+        `A ${depPctLabel} deposit requires ${formatCurrency(r.currentDeposit)}, taking approximately ` +
+        `${r.currentYearsToSave} years to save at ${savLabel}/year.${stampInfo} ` +
         `Monthly mortgage repayments at ${(r.interestRate * 100).toFixed(1)}% would be ` +
-        `${formatCurrency(r.baseMonthlyPayment)}.`;
+        `${formatCurrency(r.baseMonthlyPayment)}. ` +
+        `At NOM ${nomLabel}, migration drives demand for ~${r.migrationDwellingDemand.toLocaleString()} ` +
+        `dwellings/year (total demand ~${r.totalDwellingDemand.toLocaleString()}/yr vs ` +
+        `~${r.currentConstruction.toLocaleString()}/yr construction = ` +
+        `~${r.existingGap.toLocaleString()}/yr gap).`;
     }
 
     const parts = [];
@@ -166,16 +195,17 @@ const UI = (() => {
     if (r.constructionImpactAnnual !== 0) {
       supplyNote = ` The Grattan Institute estimates this could reduce new construction by approximately ` +
         `${Math.abs(r.constructionImpactAnnual).toLocaleString()} homes/year, with a rent impact of ` +
-        `approximately $${r.rentImpactWeekly.toFixed(2)}/week. For context, net overseas migration currently ` +
-        `drives demand for ~${r.migrationDwellingDemand.toLocaleString()} dwellings/year, and the existing ` +
-        `supply gap is ~${r.existingGap.toLocaleString()}/year — the CGT reform's construction impact ` +
+        `approximately $${r.rentImpactWeekly.toFixed(2)}/week. At NOM ${nomLabel} ` +
+        `(${r.householdSize.toFixed(1)} persons/dwelling), migration drives demand for ` +
+        `~${r.migrationDwellingDemand.toLocaleString()} dwellings/year. The total supply gap is ` +
+        `~${r.existingGap.toLocaleString()}/year — the CGT reform's construction impact ` +
         `represents just ${r.constructionAsPctOfGap.toFixed(1)}% of this gap.`;
     }
 
     return `<strong>Modelled scenario:</strong> ${reforms} would reduce ${r.cityLabel} ` +
       `dwelling prices by an estimated ${Math.abs(r.priceChangePct).toFixed(2)}% ` +
       `<span class="range-note">(range: ${r.priceChangePctHigh.toFixed(1)}% to ${r.priceChangePctLow.toFixed(1)}%)</span>, ` +
-      `saving first home buyers ${formatCurrency(Math.abs(r.depositSaving))} on a 20% deposit ` +
+      `saving first home buyers ${formatCurrency(Math.abs(r.depositSaving))} on a ${depPctLabel} deposit ` +
       `and ${Math.abs(r.yearsSaved).toFixed(1)} years of saving time.${stampInfo} ` +
       `The first home buyer share of new lending would increase by an estimated ` +
       `${r.fhbShareChangePp.toFixed(1)} percentage points, generating ` +
@@ -215,6 +245,50 @@ const UI = (() => {
       rateSlider.addEventListener('input', () => {
         currentRate = parseFloat(rateSlider.value) / 100;
         rateValue.textContent = rateSlider.value + '%';
+        updateAll();
+      });
+    }
+
+    // NOM slider
+    const nomSlider = document.getElementById('nomSlider');
+    const nomValue = document.getElementById('nomSliderValue');
+    if (nomSlider) {
+      nomSlider.addEventListener('input', () => {
+        currentNom = parseInt(nomSlider.value, 10);
+        nomValue.textContent = (currentNom / 1000).toFixed(0) + 'K';
+        updateAll();
+      });
+    }
+
+    // Household size slider
+    const hhSlider = document.getElementById('householdSlider');
+    const hhValue = document.getElementById('householdSliderValue');
+    if (hhSlider) {
+      hhSlider.addEventListener('input', () => {
+        currentHouseholdSize = parseFloat(hhSlider.value);
+        hhValue.textContent = currentHouseholdSize.toFixed(1);
+        updateAll();
+      });
+    }
+
+    // Savings slider
+    const savSlider = document.getElementById('savingsSlider');
+    const savValue = document.getElementById('savingsSliderValue');
+    if (savSlider) {
+      savSlider.addEventListener('input', () => {
+        currentSavings = parseInt(savSlider.value, 10) * 1000;
+        savValue.textContent = '$' + (currentSavings / 1000) + 'K';
+        updateAll();
+      });
+    }
+
+    // Deposit % slider
+    const depSlider = document.getElementById('depositSlider');
+    const depValue = document.getElementById('depositSliderValue');
+    if (depSlider) {
+      depSlider.addEventListener('input', () => {
+        currentDepositPct = parseInt(depSlider.value, 10) / 100;
+        depValue.textContent = depSlider.value + '%';
         updateAll();
       });
     }

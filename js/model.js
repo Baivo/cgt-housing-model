@@ -142,12 +142,20 @@ const Model = (() => {
 
   /**
    * Main model computation.
+   * @param {object} [overrides] - Optional parameter overrides:
+   *   nom (int), householdSize (float), depositPct (float 0-1), annualSavings (int)
    */
-  function compute(cgtDiscount, ngEnabled, cityKey, interestRate) {
+  function compute(cgtDiscount, ngEnabled, cityKey, interestRate, overrides) {
     const rate = interestRate || 0.06;
+    const ov = overrides || {};
     const city = DATA.dwellingPrices.data[cityKey];
     const basePrice = city.price;
     const multiplier = cityKey === 'national' ? 1.0 : cityMultiplier(cityKey);
+
+    const depositPct = ov.depositPct != null ? ov.depositPct : DATA.assumptions.depositPercentage;
+    const annualSavings = ov.annualSavings != null ? ov.annualSavings : DATA.assumptions.annualHouseholdSavings;
+    const nom = ov.nom != null ? ov.nom : DATA.migration.netOverseasMigration.current;
+    const householdSize = ov.householdSize != null ? ov.householdSize : DATA.migration.housingDemand.averageHouseholdSize;
 
     // --- Price impact: central ---
     let centralPct = interpolate(cgtDiscount, CGT_PRICE_ANCHORS, 'pricePct') * multiplier;
@@ -168,11 +176,9 @@ const Model = (() => {
     const priceDifference = newPrice - basePrice;
 
     // --- Deposit calculations ---
-    const depositPct = DATA.assumptions.depositPercentage;
     const currentDeposit = basePrice * depositPct;
     const newDeposit = newPrice * depositPct;
     const depositSaving = currentDeposit - newDeposit;
-    const annualSavings = DATA.assumptions.annualHouseholdSavings;
     const currentYearsToSave = currentDeposit / annualSavings;
     const newYearsToSave = newDeposit / annualSavings;
     const yearsSaved = currentYearsToSave - newYearsToSave;
@@ -235,10 +241,14 @@ const Model = (() => {
     const constructionImpactAnnual = Math.round(discountReduction * CONSTRUCTION_RATE_PER_PP);
     const rentImpactWeekly = Math.round(discountReduction * RENT_RATE_PER_PP * 100) / 100;
 
-    // --- Migration context ---
+    // --- Migration context (dynamic based on user-adjusted NOM and household size) ---
     const mig = DATA.migration;
-    const migrationDwellingDemand = mig.housingDemand.annualDwellingDemandFromMigration;
-    const totalDwellingDemand = mig.housingDemand.totalAnnualDwellingDemand;
+    const migrationDwellingDemand = Math.round(nom / householdSize);
+    const baseMigDemand = Math.round(
+      mig.netOverseasMigration.current / mig.housingDemand.averageHouseholdSize
+    );
+    const nonMigDemand = mig.housingDemand.totalAnnualDwellingDemand - baseMigDemand;
+    const totalDwellingDemand = nonMigDemand + migrationDwellingDemand;
     const currentConstruction = mig.housingShortfall.annualConstruction2024;
     const existingGap = totalDwellingDemand - currentConstruction;
     const constructionAsPctOfGap = existingGap > 0
@@ -309,23 +319,27 @@ const Model = (() => {
       phaseIn,
       interestRate: rate,
       cgtDiscount,
-      ngEnabled
+      ngEnabled,
+      nom,
+      householdSize,
+      depositPctUsed: depositPct,
+      annualSavingsUsed: annualSavings
     };
   }
 
-  function computeAllCities(cgtDiscount, ngEnabled, interestRate) {
+  function computeAllCities(cgtDiscount, ngEnabled, interestRate, overrides) {
     const keys = Object.keys(DATA.dwellingPrices.data);
     return keys.map(key => ({
       key,
-      ...compute(cgtDiscount, ngEnabled, key, interestRate)
+      ...compute(cgtDiscount, ngEnabled, key, interestRate, overrides)
     }));
   }
 
-  function computeSweep(ngEnabled, cityKey, step, interestRate) {
+  function computeSweep(ngEnabled, cityKey, step, interestRate, overrides) {
     step = step || 5;
     const results = [];
     for (let d = 0; d <= 50; d += step) {
-      results.push(compute(d, ngEnabled, cityKey, interestRate));
+      results.push(compute(d, ngEnabled, cityKey, interestRate, overrides));
     }
     return results;
   }
