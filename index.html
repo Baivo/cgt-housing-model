@@ -105,6 +105,40 @@
       </div>
     </div>
 
+    <div class="controls-grid-4" style="margin-top: 1rem;">
+      <div class="control-group">
+        <label for="horizonSlider">Projection Horizon</label>
+        <div class="slider-container">
+          <input type="range" id="horizonSlider" min="5" max="20" step="1" value="10">
+          <span class="slider-value slider-value-sm" id="horizonSliderValue">10 yrs</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="priceGrowthSlider">Price Growth (p.a.)</label>
+        <div class="slider-container">
+          <input type="range" id="priceGrowthSlider" min="0" max="10" step="0.5" value="6.5">
+          <span class="slider-value slider-value-sm" id="priceGrowthSliderValue">6.5%</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="incomeGrowthSlider">Income Growth (p.a.)</label>
+        <div class="slider-container">
+          <input type="range" id="incomeGrowthSlider" min="0" max="6" step="0.5" value="3.0">
+          <span class="slider-value slider-value-sm" id="incomeGrowthSliderValue">3.0%</span>
+        </div>
+      </div>
+
+      <div class="control-group" style="display: flex; align-items: flex-end;">
+        <div class="presets" style="margin-top: 0; flex-wrap: nowrap;">
+          <button class="preset-btn" data-preset="current" style="font-size: 0.7rem; padding: 0.3rem 0.5rem;">Current</button>
+          <button class="preset-btn" data-preset="grattan" style="font-size: 0.7rem; padding: 0.3rem 0.5rem;">Grattan (25%)</button>
+          <button class="preset-btn" data-preset="full" style="font-size: 0.7rem; padding: 0.3rem 0.5rem;">Full Reform</button>
+        </div>
+      </div>
+    </div>
+
     <div class="presets">
       <button class="preset-btn" data-preset="current">Current Policy (50%)</button>
       <button class="preset-btn" data-preset="e61">e61 Proposal (33%)</button>
@@ -207,7 +241,64 @@
     </div>
   </section>
 
-  <!-- ====== Charts ====== -->
+  <!-- ====== Projection Summary ====== -->
+  <section class="metrics-grid" style="margin-top: 1.5rem;">
+    <div class="metric-card">
+      <div class="metric-label">Price in <span id="projEndYearLabel">2036</span></div>
+      <div class="metric-value" id="metricProjPriceNoReform">$0</div>
+      <div class="metric-sub">Without reform</div>
+      <div class="metric-value positive" id="metricProjPriceReform" style="font-size: 1.2rem; margin-top: 0.25rem;">$0</div>
+      <div class="metric-sub">With reform</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Price Saving by <span id="projEndYearLabel2">2036</span></div>
+      <div class="metric-value positive" id="metricProjPriceDiff">$0</div>
+      <div class="metric-sub" id="metricProjPriceDiffPct">0% lower</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Year You Can Buy</div>
+      <div class="metric-value" id="metricProjBuyNoReform">&mdash;</div>
+      <div class="metric-sub">Without reform</div>
+      <div class="metric-value positive" id="metricProjBuyReform" style="font-size: 1.2rem; margin-top: 0.25rem;">&mdash;</div>
+      <div class="metric-sub" id="metricProjBuySaved">With reform</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Price-to-Income Ratio</div>
+      <div class="metric-value" id="metricProjPtiNoReform">0</div>
+      <div class="metric-sub">Without reform</div>
+      <div class="metric-value positive" id="metricProjPtiReform" style="font-size: 1.2rem; margin-top: 0.25rem;">0</div>
+      <div class="metric-sub">With reform</div>
+    </div>
+  </section>
+
+  <!-- ====== Projection Charts ====== -->
+  <section class="charts-grid">
+    <div class="chart-card" style="grid-column: span 2;">
+      <h3>Your Housing Future <span class="vintage-badge">Projected</span></h3>
+      <p class="chart-desc">Dwelling price trajectories under current policy vs your selected reform. Prices evolve with baseline growth, migration pressure, and supply gap dynamics. Reform effects phase in over 5 years.</p>
+      <div class="chart-wrap" style="height: 360px;">
+        <canvas id="trajectoryChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>When Can You Buy? <span class="vintage-badge">Deposit Race</span></h3>
+      <p class="chart-desc">Your cumulative savings vs the deposit required under each scenario. The crossover point is the year you can afford a deposit.</p>
+      <div class="chart-wrap">
+        <canvas id="depositRaceChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Housing Stock Balance</h3>
+      <p class="chart-desc">Cumulative dwelling demand vs cumulative construction, showing how the supply gap compounds over time under each scenario.</p>
+      <div class="chart-wrap">
+        <canvas id="stockChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== Analytical Charts ====== -->
   <section class="charts-grid">
     <div class="chart-card">
       <h3>Housing Price Impact by City <span class="vintage-badge">with confidence range</span></h3>
@@ -238,14 +329,6 @@
       <p class="chart-desc">Additional annual government revenue from reducing the CGT discount, with and without negative gearing reform. Calibrated to Grattan and e61 estimates.</p>
       <div class="chart-wrap">
         <canvas id="revenueChart"></canvas>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <h3>5-Year Phase-In Timeline <span class="vintage-badge">Grattan approach</span></h3>
-      <p class="chart-desc">Estimated gradual price adjustment over 5 years using Grattan Institute's recommended phase-in approach rather than immediate implementation. Shows how prices and FHB share change during transition.</p>
-      <div class="chart-wrap">
-        <canvas id="phaseChart"></canvas>
       </div>
     </div>
 
@@ -335,11 +418,38 @@
         portion of the reform revenue were directed to social housing or planning reform.
       </p>
 
-      <h4>Phase-In Timeline</h4>
+      <h4>Time-Series Projection Model</h4>
       <p>
-        The model includes a 5-year phase-in timeline based on the Grattan Institute's recommendation of gradual
-        implementation rather than grandfathering. This shows how price adjustments and FHB share changes would
-        unfold over time, giving a more realistic picture of the transition.
+        The model projects dwelling prices, affordability, and housing supply forward year-by-year over a
+        user-configurable horizon (5&ndash;20 years). It runs <strong>two parallel simulations</strong> &mdash;
+        one under current policy and one under the selected reform &mdash; to show how differences compound over time.
+      </p>
+      <p>Each year in the simulation:</p>
+      <ol>
+        <li><strong>Population</strong> grows by the user-selected Net Overseas Migration (NOM) per year.</li>
+        <li><strong>Dwelling demand</strong> is calculated from NOM and household size, combined with non-migration demand.</li>
+        <li><strong>Construction</strong> starts from the baseline (~177,000/yr) and incorporates the CGT reform's
+          construction impact as it phases in over 5 years (Grattan approach).</li>
+        <li><strong>Dwelling stock</strong> grows by annual construction.</li>
+        <li><strong>Price growth</strong> each year combines four components:
+          <ul>
+            <li><em>Baseline capital growth</em> (user-adjustable, default 6.5% p.a.)</li>
+            <li><em>Migration demand pressure</em>: population change relative to total population, scaled by the
+              migration-price elasticity (Tran &amp; Faff, 2023)</li>
+            <li><em>Supply gap scarcity</em>: when demand exceeds construction, the gap relative to total housing
+              stock creates additional upward price pressure (coefficient 0.5)</li>
+            <li><em>CGT reform effect</em>: the calibrated price impact phases in linearly over 5 years</li>
+          </ul>
+        </li>
+        <li><strong>Savings</strong> accumulate each year; the model identifies when cumulative savings reach
+          the deposit required at that year's price.</li>
+        <li><strong>Income</strong> grows at the user-selected rate (default 3.0% p.a., based on ABS WPI trend),
+          enabling price-to-income ratio tracking.</li>
+      </ol>
+      <p>
+        This approach captures key dynamics that static models miss: the compounding effect of sustained migration
+        on prices, the growing supply gap, and how reform benefits accumulate over time. The &ldquo;deposit race&rdquo;
+        chart makes affordability viscerally clear by showing whether savings can outpace rising house prices.
       </p>
 
       <h4>Price Impact Calibration</h4>
@@ -358,7 +468,6 @@
       <ul>
         <li>Typical investor marginal tax rate: 39%</li>
         <li>Average holding period: 7 years</li>
-        <li>Average annual capital growth: 6.5%</li>
         <li><strong>Deposit percentage: 20% (adjustable 5%-30%)</strong></li>
         <li><strong>Annual household savings: $40,000 (adjustable $10K-$100K)</strong></li>
         <li>Median household income: $105,000</li>
@@ -367,6 +476,9 @@
         <li>Serviceability threshold: 30% of gross income</li>
         <li><strong>Net overseas migration: 306,000 (adjustable 0-500K)</strong></li>
         <li><strong>Persons per dwelling: 2.5 (adjustable 2.0-3.0)</strong></li>
+        <li><strong>Projection horizon: 10 years (adjustable 5-20)</strong></li>
+        <li><strong>Baseline price growth: 6.5% p.a. (adjustable 0-10%)</strong></li>
+        <li><strong>Income growth: 3.0% p.a. (adjustable 0-6%)</strong> &mdash; ABS Wage Price Index long-run trend</li>
       </ul>
 
       <h4>Migration Price Effect Model</h4>
@@ -425,13 +537,14 @@
       <h4>Remaining Limitations</h4>
       <ul>
         <li>Uses piecewise linear interpolation calibrated to published estimates, not a full general equilibrium model</li>
+        <li>Projection assumes constant annual NOM, construction capacity, and growth rates; real-world values fluctuate with economic cycles</li>
         <li>Supply-side estimates are scaled linearly from a single calibration point (Grattan, 25% discount); actual supply responses may be non-linear</li>
         <li>Stamp duty schedules are simplified approximations; actual duty may vary based on property type, eligibility, and concession changes</li>
         <li>Does not model state-level land tax or planning regulation differences beyond stamp duty</li>
-        <li>Migration context uses current NOM levels; future migration policy changes would alter demand projections</li>
         <li>Does not model foreign investment restrictions or their interaction with CGT reform</li>
         <li>City-level investor shares are estimates derived from ABS lending patterns (confidence: moderate)</li>
         <li>Phase-in timeline assumes linear adjustment; actual market adjustment may be front-loaded or delayed</li>
+        <li>Income growth is applied uniformly; actual household income varies by age, region, and occupation</li>
       </ul>
 
     </div>

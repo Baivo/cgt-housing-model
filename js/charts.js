@@ -1,14 +1,13 @@
 /**
  * Chart rendering using Chart.js.
- * Creates and updates six visualisations including confidence bands
- * and phase-in timeline.
+ * Creates and updates eight visualisations including projection charts.
  */
 const Charts = (() => {
-  let priceChart, affordChart, shareChart, revenueChart, phaseChart, supplyChart;
+  let priceChart, affordChart, shareChart, revenueChart, supplyChart;
+  let trajectoryChart, depositRaceChart, stockChart;
 
   const BLUE = 'rgba(59, 130, 246, 0.85)';
   const BLUE_LIGHT = 'rgba(59, 130, 246, 0.15)';
-  const BLUE_BAND = 'rgba(59, 130, 246, 0.08)';
   const RED = 'rgba(239, 68, 68, 0.85)';
   const RED_LIGHT = 'rgba(239, 68, 68, 0.15)';
   const GREEN = 'rgba(34, 197, 94, 0.85)';
@@ -59,7 +58,212 @@ const Charts = (() => {
     return '$' + val.toFixed(0);
   }
 
-  /** 1. Price impact by city — horizontal bar with confidence range */
+  /* ========== 1. TRAJECTORY CHART — price over time, two scenarios ========== */
+  function initTrajectoryChart(ctx) {
+    trajectoryChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: [], datasets: [] },
+      options: deepMerge(commonOptions, {
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: item => `${item.dataset.label}: ${formatDollars(item.parsed.y)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Year', color: '#94a3b8' }
+          },
+          y: {
+            title: { display: true, text: 'Dwelling Price ($)', color: '#94a3b8' },
+            ticks: { callback: v => formatDollars(v), color: '#94a3b8' }
+          }
+        }
+      })
+    });
+  }
+
+  function updateTrajectoryChart(proj) {
+    const labels = proj.noReform.years.map(y => y.calendarYear);
+    trajectoryChart.data.labels = labels;
+    trajectoryChart.data.datasets = [
+      {
+        label: 'No Reform (Current Policy)',
+        data: proj.noReform.years.map(y => y.price),
+        borderColor: RED,
+        backgroundColor: RED_LIGHT,
+        fill: false,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 3
+      },
+      {
+        label: 'With Reform',
+        data: proj.withReform.years.map(y => y.price),
+        borderColor: GREEN,
+        backgroundColor: GREEN_LIGHT,
+        fill: false,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 3
+      },
+      {
+        label: 'Savings from Reform',
+        data: proj.difference.map(d => d.priceDiff),
+        borderColor: AMBER,
+        backgroundColor: AMBER_LIGHT,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 2,
+        borderWidth: 2,
+        borderDash: [6, 3],
+        yAxisID: 'y1'
+      }
+    ];
+
+    trajectoryChart.options.scales.y1 = {
+      title: { display: true, text: 'Price Saving ($)', color: '#94a3b8' },
+      position: 'right',
+      grid: { drawOnChartArea: false },
+      ticks: { callback: v => formatDollars(v), color: '#94a3b8' }
+    };
+
+    trajectoryChart.update();
+  }
+
+  /* ========== 2. DEPOSIT RACE CHART — savings vs deposit needed ========== */
+  function initDepositRaceChart(ctx) {
+    depositRaceChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: [], datasets: [] },
+      options: deepMerge(commonOptions, {
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: item => `${item.dataset.label}: ${formatDollars(item.parsed.y)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Year', color: '#94a3b8' }
+          },
+          y: {
+            title: { display: true, text: 'Amount ($)', color: '#94a3b8' },
+            ticks: { callback: v => formatDollars(v), color: '#94a3b8' }
+          }
+        }
+      })
+    });
+  }
+
+  function updateDepositRaceChart(proj) {
+    const labels = proj.noReform.years.map(y => y.calendarYear);
+    depositRaceChart.data.labels = labels;
+    depositRaceChart.data.datasets = [
+      {
+        label: 'Your Cumulative Savings',
+        data: proj.noReform.years.map(y => y.cumulativeSavings),
+        borderColor: BLUE,
+        backgroundColor: 'rgba(59, 130, 246, 0.08)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 3,
+        pointRadius: 3
+      },
+      {
+        label: 'Deposit Needed (No Reform)',
+        data: proj.noReform.years.map(y => y.depositNeeded),
+        borderColor: RED,
+        backgroundColor: 'transparent',
+        fill: false,
+        tension: 0.3,
+        borderWidth: 2,
+        borderDash: [8, 4],
+        pointRadius: 3
+      },
+      {
+        label: 'Deposit Needed (With Reform)',
+        data: proj.withReform.years.map(y => y.depositNeeded),
+        borderColor: GREEN,
+        backgroundColor: 'transparent',
+        fill: false,
+        tension: 0.3,
+        borderWidth: 2,
+        borderDash: [8, 4],
+        pointRadius: 3
+      }
+    ];
+    depositRaceChart.update();
+  }
+
+  /* ========== 3. STOCK BALANCE CHART — cumulative gap ========== */
+  function initStockChart(ctx) {
+    stockChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [] },
+      options: deepMerge(commonOptions, {
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: {
+            callbacks: {
+              label: item => {
+                const v = item.parsed.y;
+                return `${item.dataset.label}: ${v >= 0 ? '+' : ''}${v.toLocaleString()} dwellings`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Year', color: '#94a3b8' }
+          },
+          y: {
+            title: { display: true, text: 'Cumulative Supply Gap (dwellings)', color: '#94a3b8' },
+            ticks: {
+              callback: v => {
+                if (Math.abs(v) >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+                if (Math.abs(v) >= 1e3) return (v / 1e3).toFixed(0) + 'K';
+                return v;
+              },
+              color: '#94a3b8'
+            }
+          }
+        }
+      })
+    });
+  }
+
+  function updateStockChart(proj) {
+    const labels = proj.noReform.years.slice(1).map(y => y.calendarYear);
+    stockChart.data.labels = labels;
+    stockChart.data.datasets = [
+      {
+        label: 'Cumulative Gap (No Reform)',
+        data: proj.noReform.years.slice(1).map(y => y.cumulativeGap),
+        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+        borderColor: RED,
+        borderWidth: 1,
+        borderRadius: 3
+      },
+      {
+        label: 'Cumulative Gap (With Reform)',
+        data: proj.withReform.years.slice(1).map(y => y.cumulativeGap),
+        backgroundColor: 'rgba(34, 197, 94, 0.6)',
+        borderColor: GREEN,
+        borderWidth: 1,
+        borderRadius: 3
+      }
+    ];
+    stockChart.update();
+  }
+
+  /* ========== 4. Price impact by city — horizontal bar with confidence range ========== */
   function initPriceChart(ctx) {
     priceChart = new Chart(ctx, {
       type: 'bar',
@@ -125,7 +329,7 @@ const Charts = (() => {
     priceChart.update();
   }
 
-  /** 2. Affordability sweep with confidence band */
+  /* ========== 5. Affordability sweep ========== */
   function initAffordChart(ctx) {
     affordChart = new Chart(ctx, {
       type: 'line',
@@ -181,7 +385,7 @@ const Charts = (() => {
         label: '20% Deposit Required',
         data: sweep.map(s => s.newDeposit),
         borderColor: BLUE,
-        backgroundColor: BLUE_LIGHT,
+        backgroundColor: 'rgba(59, 130, 246, 0.08)',
         fill: false,
         tension: 0.3,
         yAxisID: 'y'
@@ -200,7 +404,7 @@ const Charts = (() => {
     affordChart.update();
   }
 
-  /** 3. Market share */
+  /* ========== 6. Market share ========== */
   function initShareChart(ctx) {
     shareChart = new Chart(ctx, {
       type: 'bar',
@@ -262,7 +466,7 @@ const Charts = (() => {
     shareChart.update();
   }
 
-  /** 4. Revenue impact */
+  /* ========== 7. Revenue impact ========== */
   function initRevenueChart(ctx) {
     revenueChart = new Chart(ctx, {
       type: 'line',
@@ -297,7 +501,7 @@ const Charts = (() => {
         label: 'CGT Reform Only',
         data: sweepNG.map(s => s.revenueGainBillions),
         borderColor: BLUE,
-        backgroundColor: BLUE_LIGHT,
+        backgroundColor: 'rgba(59, 130, 246, 0.08)',
         fill: true,
         tension: 0.3
       },
@@ -314,71 +518,7 @@ const Charts = (() => {
     revenueChart.update();
   }
 
-  /** 5. Phase-in timeline */
-  function initPhaseChart(ctx) {
-    phaseChart = new Chart(ctx, {
-      type: 'line',
-      data: { labels: [], datasets: [] },
-      options: deepMerge(commonOptions, {
-        plugins: {
-          legend: { display: true },
-          tooltip: {
-            callbacks: {
-              label: item => {
-                const ds = item.dataset.label;
-                if (ds.includes('Price')) return `${ds}: ${formatDollars(item.parsed.y)}`;
-                return `${ds}: ${item.parsed.y.toFixed(1)}pp`;
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            title: { display: true, text: 'Phase-in Period', color: '#94a3b8' }
-          },
-          y: {
-            title: { display: true, text: 'Dwelling Price ($)', color: '#94a3b8' },
-            ticks: { callback: v => formatDollars(v), color: '#94a3b8' },
-            position: 'left'
-          },
-          y1: {
-            title: { display: true, text: 'FHB Share Change (pp)', color: '#94a3b8' },
-            position: 'right',
-            grid: { drawOnChartArea: false },
-            ticks: { color: '#94a3b8' }
-          }
-        }
-      })
-    });
-  }
-
-  function updatePhaseChart(phaseIn) {
-    phaseChart.data.labels = phaseIn.map(p => p.label);
-    phaseChart.data.datasets = [
-      {
-        label: 'Dwelling Price',
-        data: phaseIn.map(p => p.price),
-        borderColor: BLUE,
-        backgroundColor: BLUE_LIGHT,
-        fill: true,
-        tension: 0.3,
-        yAxisID: 'y'
-      },
-      {
-        label: 'FHB Share Change',
-        data: phaseIn.map(p => p.fhbShareChangePp),
-        borderColor: GREEN,
-        backgroundColor: GREEN_LIGHT,
-        fill: false,
-        tension: 0.3,
-        borderDash: [6, 3],
-        yAxisID: 'y1'
-      }
-    ];
-    phaseChart.update();
-  }
-
-  /** 6. Supply-side impact */
+  /* ========== 8. Supply-side impact ========== */
   function initSupplyChart(ctx) {
     supplyChart = new Chart(ctx, {
       type: 'bar',
@@ -444,17 +584,22 @@ const Charts = (() => {
     supplyChart.update();
   }
 
+  /* ========== Init ========== */
   function init() {
+    initTrajectoryChart(document.getElementById('trajectoryChart').getContext('2d'));
+    initDepositRaceChart(document.getElementById('depositRaceChart').getContext('2d'));
+    initStockChart(document.getElementById('stockChart').getContext('2d'));
     initPriceChart(document.getElementById('priceChart').getContext('2d'));
     initAffordChart(document.getElementById('affordChart').getContext('2d'));
     initShareChart(document.getElementById('shareChart').getContext('2d'));
     initRevenueChart(document.getElementById('revenueChart').getContext('2d'));
-    initPhaseChart(document.getElementById('phaseChart').getContext('2d'));
     initSupplyChart(document.getElementById('supplyChart').getContext('2d'));
   }
 
   return {
-    init, updatePriceChart, updateAffordChart, updateShareChart,
-    updateRevenueChart, updatePhaseChart, updateSupplyChart
+    init,
+    updateTrajectoryChart, updateDepositRaceChart, updateStockChart,
+    updatePriceChart, updateAffordChart, updateShareChart,
+    updateRevenueChart, updateSupplyChart
   };
 })();

@@ -10,13 +10,19 @@ const UI = (() => {
   let currentHouseholdSize = 2.5;
   let currentSavings = 40000;
   let currentDepositPct = 0.20;
+  let currentHorizon = 10;
+  let currentPriceGrowth = 6.5;
+  let currentIncomeGrowth = 3.0;
 
   function getOverrides() {
     return {
       nom: currentNom,
       householdSize: currentHouseholdSize,
       annualSavings: currentSavings,
-      depositPct: currentDepositPct
+      depositPct: currentDepositPct,
+      horizonYears: currentHorizon,
+      baseGrowthPct: currentPriceGrowth,
+      incomeGrowthPct: currentIncomeGrowth
     };
   }
 
@@ -26,8 +32,55 @@ const UI = (() => {
     }).format(val);
   }
 
+  function updateProjectionMetrics(proj) {
+    const endYear = proj.baseYear + proj.horizonYears;
+    const el = id => document.getElementById(id);
+
+    // End year labels
+    const endYrStr = endYear.toString();
+    el('projEndYearLabel').textContent = endYrStr;
+    el('projEndYearLabel2').textContent = endYrStr;
+
+    const lastNR = proj.noReform.years[proj.noReform.years.length - 1];
+    const lastWR = proj.withReform.years[proj.withReform.years.length - 1];
+
+    // Prices at end of horizon
+    el('metricProjPriceNoReform').textContent = formatCurrency(lastNR.price);
+    el('metricProjPriceReform').textContent = formatCurrency(lastWR.price);
+    el('metricProjPriceReform').className = 'metric-value ' +
+      (lastWR.price < lastNR.price ? 'positive' : '');
+
+    // Price saving
+    const diff = lastNR.price - lastWR.price;
+    el('metricProjPriceDiff').textContent = formatCurrency(Math.abs(diff));
+    el('metricProjPriceDiff').className = 'metric-value ' + (diff > 0 ? 'positive' : '');
+    const diffPct = lastNR.price > 0 ? ((diff / lastNR.price) * 100).toFixed(1) : '0';
+    el('metricProjPriceDiffPct').textContent = diff > 0
+      ? `${diffPct}% lower with reform`
+      : 'No reform selected';
+
+    // Buy year
+    el('metricProjBuyNoReform').textContent = proj.buyYearNoReform || 'Beyond horizon';
+    el('metricProjBuyReform').textContent = proj.buyYearWithReform || 'Beyond horizon';
+    el('metricProjBuyReform').className = 'metric-value ' +
+      (proj.buyYearWithReform && proj.buyYearNoReform && proj.buyYearWithReform < proj.buyYearNoReform
+        ? 'positive' : '');
+
+    if (proj.buyYearsSaved && proj.buyYearsSaved > 0) {
+      el('metricProjBuySaved').textContent =
+        `Buy ${proj.buyYearsSaved} year${proj.buyYearsSaved !== 1 ? 's' : ''} sooner with reform`;
+    } else {
+      el('metricProjBuySaved').textContent = 'With reform';
+    }
+
+    // Price-to-income
+    el('metricProjPtiNoReform').textContent = lastNR.priceToIncome.toFixed(1) + 'x';
+    el('metricProjPtiReform').textContent = lastWR.priceToIncome.toFixed(1) + 'x';
+    el('metricProjPtiReform').className = 'metric-value ' +
+      (lastWR.priceToIncome < lastNR.priceToIncome ? 'positive' : '');
+  }
+
   function updateMetricCards(result) {
-    // Price change with confidence range
     const priceEl = document.getElementById('metricPriceChange');
     priceEl.textContent = (result.priceChangePct >= 0 ? '+' : '') + result.priceChangePct.toFixed(2) + '%';
     priceEl.className = 'metric-value ' + (result.priceChangePct < 0 ? 'positive' : result.priceChangePct > 0 ? 'negative' : '');
@@ -47,7 +100,6 @@ const UI = (() => {
       : 'from ' + formatCurrency(result.basePrice);
     document.getElementById('metricBasePrice').textContent = basePriceNote;
 
-    // Deposit + stamp duty
     document.getElementById('metricDepositSaving').textContent =
       (result.depositSaving >= 0 ? '+' : '-') + formatCurrency(Math.abs(result.depositSaving));
     document.getElementById('metricDepositSaving').className =
@@ -58,13 +110,11 @@ const UI = (() => {
     document.getElementById('metricYearsSaved').className =
       'metric-value ' + (result.yearsSaved > 0 ? 'positive' : '');
 
-    // FHB share
     document.getElementById('metricFhbShare').textContent =
       (result.fhbShareChangePp >= 0 ? '+' : '') + result.fhbShareChangePp.toFixed(1) + 'pp';
     document.getElementById('metricFhbShare').className =
       'metric-value ' + (result.fhbShareChangePp > 0 ? 'positive' : '');
 
-    // Revenue
     document.getElementById('metricRevenue').textContent =
       '+$' + result.revenueGainBillions.toFixed(1) + 'B';
     document.getElementById('metricRevenue').className =
@@ -75,11 +125,9 @@ const UI = (() => {
     document.getElementById('metricEffectiveCgtBase').textContent =
       'from ' + result.currentEffectiveCgt.toFixed(1) + '%';
 
-    // Investor return
     document.getElementById('metricReturnReduction').textContent =
       result.returnReductionPct.toFixed(1) + '%';
 
-    // Stamp duty
     document.getElementById('metricStampDuty').textContent =
       formatCurrency(result.stampDutyNew.fhb);
     document.getElementById('metricStampDutyBase').textContent =
@@ -87,7 +135,6 @@ const UI = (() => {
     document.getElementById('metricStampDutyNote').textContent =
       result.stampDutyNew.fhbNote;
 
-    // Total upfront
     document.getElementById('metricTotalUpfront').textContent =
       formatCurrency(result.totalUpfrontNew);
     document.getElementById('metricTotalUpfrontSaving').textContent =
@@ -97,7 +144,6 @@ const UI = (() => {
     document.getElementById('metricTotalUpfrontSaving').className =
       'metric-sub ' + (result.totalUpfrontSaving > 0 ? 'positive-text' : '');
 
-    // Mortgage
     document.getElementById('metricMonthly').textContent =
       formatCurrency(result.monthlyPayment) + '/mo';
     document.getElementById('metricMonthlyBase').textContent =
@@ -105,7 +151,6 @@ const UI = (() => {
     document.getElementById('metricIncomeNeeded').textContent =
       formatCurrency(result.incomeNeeded);
 
-    // Supply-side
     document.getElementById('metricConstruction').textContent =
       result.constructionImpactAnnual === 0 ? '0'
         : (result.constructionImpactAnnual > 0 ? '+' : '') + result.constructionImpactAnnual.toLocaleString();
@@ -118,7 +163,6 @@ const UI = (() => {
     document.getElementById('metricRent').className =
       'metric-value ' + (result.rentImpactWeekly > 0 ? 'negative' : '');
 
-    // Migration price effect (two channels)
     const migPriceEl = document.getElementById('metricMigPrice');
     if (migPriceEl) {
       migPriceEl.textContent = result.migPriceAdjustPct === 0
@@ -130,7 +174,7 @@ const UI = (() => {
     const migPriceSub = document.getElementById('metricMigPriceSub');
     if (migPriceSub) {
       if (result.migPriceAdjustPct === 0) {
-        migPriceSub.textContent = 'NOM at baseline (306K) — no price adjustment';
+        migPriceSub.textContent = 'NOM at baseline (306K) \u2014 no price adjustment';
       } else {
         const sign = v => v > 0 ? '+' : '';
         migPriceSub.textContent =
@@ -140,7 +184,6 @@ const UI = (() => {
       }
     }
 
-    // Migration demand
     document.getElementById('metricMigDemand').textContent =
       result.migrationDwellingDemand.toLocaleString() + '/yr';
     const migSub = document.getElementById('metricMigDemandSub');
@@ -148,7 +191,6 @@ const UI = (() => {
       migSub.textContent = `NOM ${(result.nom / 1000).toFixed(0)}K \u00F7 ${result.householdSize.toFixed(1)} ppd`;
     }
 
-    // Supply gap
     document.getElementById('metricSupplyGap').textContent =
       result.existingGap.toLocaleString() + '/yr';
     document.getElementById('metricSupplyGap').className =
@@ -175,26 +217,32 @@ const UI = (() => {
     const sweepCurrent = Model.computeSweep(ngEnabled, currentCity, 5, currentRate, ov);
     const sweepNG = Model.computeSweep(true, currentCity, 5, currentRate, ov);
     const sweepNoNG = Model.computeSweep(false, currentCity, 5, currentRate, ov);
+    const proj = Model.computeProjection(currentDiscount, ngEnabled, currentCity, currentRate, ov);
 
     updateMetricCards(result);
+    updateProjectionMetrics(proj);
+
+    Charts.updateTrajectoryChart(proj);
+    Charts.updateDepositRaceChart(proj);
+    Charts.updateStockChart(proj);
     Charts.updatePriceChart(allCities);
     Charts.updateAffordChart(sweepCurrent);
     Charts.updateShareChart(sweepCurrent);
     Charts.updateRevenueChart(sweepNG, sweepNoNG);
-    Charts.updatePhaseChart(result.phaseIn);
     Charts.updateSupplyChart(sweepCurrent);
 
     document.getElementById('cityLabel').textContent = result.cityLabel;
-    document.getElementById('scenarioSummary').innerHTML = buildSummary(result);
+    document.getElementById('scenarioSummary').innerHTML = buildSummary(result, proj);
 
     const ngLabel = document.querySelector('.toggle-label');
     ngLabel.textContent = ngEnabled ? 'Enabled (current policy)' : 'Disabled';
   }
 
-  function buildSummary(r) {
+  function buildSummary(r, proj) {
     const depPctLabel = Math.round(r.depositPctUsed * 100) + '%';
     const savLabel = formatCurrency(r.annualSavingsUsed);
     const nomLabel = (r.nom / 1000).toFixed(0) + 'K';
+    const endYear = proj.baseYear + proj.horizonYears;
 
     const migNote = r.migPriceAdjustPct !== 0
       ? ` At NOM ${nomLabel} (vs baseline 306K), migration pressure ${r.migPriceAdjustPct > 0 ? 'raises' : 'lowers'} ` +
@@ -202,23 +250,19 @@ const UI = (() => {
         `(${r.migPriceAdjustPct > 0 ? '+' : ''}${r.migPriceAdjustPct.toFixed(1)}%).`
       : '';
 
-    const stampInfo = r.stampDutyNew.fhb > 0
-      ? ` Stamp duty for a first home buyer would be ${formatCurrency(r.stampDutyNew.fhb)}, ` +
-        `bringing total upfront costs to ${formatCurrency(r.totalUpfrontNew)}.`
-      : ` First home buyers are exempt from stamp duty at this price in this state.`;
-
-    const gapNote = ` At NOM ${nomLabel}, migration drives demand for ~${r.migrationDwellingDemand.toLocaleString()} ` +
-      `dwellings/year (total demand ~${r.totalDwellingDemand.toLocaleString()}/yr vs ` +
-      `~${r.currentConstruction.toLocaleString()}/yr construction = ` +
-      `${r.existingGap > 0 ? '~' + r.existingGap.toLocaleString() + '/yr gap' : 'surplus'}).`;
+    const lastNR = proj.noReform.years[proj.noReform.years.length - 1];
+    const lastWR = proj.withReform.years[proj.withReform.years.length - 1];
+    const projSaving = lastNR.price - lastWR.price;
 
     if (r.cgtDiscount === 50 && r.ngEnabled) {
+      let projNote = ` Over ${proj.horizonYears} years at ${currentPriceGrowth}% growth, prices are projected to reach ${formatCurrency(lastNR.price)} by ${endYear}.`;
+      if (proj.buyYearNoReform) {
+        projNote += ` At ${savLabel}/year savings, you could afford a ${depPctLabel} deposit by ${proj.buyYearNoReform}.`;
+      } else {
+        projNote += ` At ${savLabel}/year savings, the ${depPctLabel} deposit is not reachable within ${proj.horizonYears} years.`;
+      }
       return `<strong>Current policy:</strong> 50% CGT discount with negative gearing. ` +
-        `The mean dwelling price in ${r.cityLabel} is ${formatCurrency(r.basePrice)}.${migNote} ` +
-        `A ${depPctLabel} deposit requires ${formatCurrency(r.currentDeposit)}, taking approximately ` +
-        `${r.currentYearsToSave} years to save at ${savLabel}/year.${stampInfo} ` +
-        `Monthly mortgage repayments at ${(r.interestRate * 100).toFixed(1)}% would be ` +
-        `${formatCurrency(r.baseMonthlyPayment)}.${gapNote}`;
+        `The mean dwelling price in ${r.cityLabel} is ${formatCurrency(r.basePrice)}.${migNote}${projNote}`;
     }
 
     const parts = [];
@@ -226,32 +270,24 @@ const UI = (() => {
     if (!r.ngEnabled) parts.push('removing negative gearing');
     const reforms = parts.join(' and ');
 
-    let supplyNote = '';
-    if (r.constructionImpactAnnual !== 0) {
-      supplyNote = ` The Grattan Institute estimates this could reduce new construction by approximately ` +
-        `${Math.abs(r.constructionImpactAnnual).toLocaleString()} homes/year, with a rent impact of ` +
-        `approximately $${r.rentImpactWeekly.toFixed(2)}/week.` +
-        (r.existingGap > 0
-          ? ` The total supply gap is ~${r.existingGap.toLocaleString()}/year — the CGT reform's ` +
-            `construction impact represents just ${r.constructionAsPctOfGap.toFixed(1)}% of this gap.`
-          : '');
+    let projNote = ` By ${endYear}, dwelling prices would be ${formatCurrency(lastWR.price)} with reform vs ${formatCurrency(lastNR.price)} without — ` +
+      `a saving of <strong>${formatCurrency(projSaving)}</strong>.`;
+
+    if (proj.buyYearWithReform && proj.buyYearNoReform) {
+      if (proj.buyYearsSaved > 0) {
+        projNote += ` You could buy <strong>${proj.buyYearsSaved} year${proj.buyYearsSaved !== 1 ? 's' : ''} sooner</strong> (${proj.buyYearWithReform} vs ${proj.buyYearNoReform}).`;
+      }
+    } else if (proj.buyYearWithReform && !proj.buyYearNoReform) {
+      projNote += ` With reform you could buy by ${proj.buyYearWithReform}; without reform the deposit is out of reach within the horizon.`;
     }
 
-    return `<strong>Modelled scenario:</strong> ${reforms}${migNote} would reduce ${r.cityLabel} ` +
-      `dwelling prices by an estimated ${Math.abs(r.priceChangePct).toFixed(2)}% ` +
-      `<span class="range-note">(range: ${r.priceChangePctHigh.toFixed(1)}% to ${r.priceChangePctLow.toFixed(1)}%)</span> ` +
-      `from the ${r.migPriceAdjustPct !== 0 ? 'migration-adjusted' : ''} baseline of ${formatCurrency(r.basePrice)}, ` +
-      `saving first home buyers ${formatCurrency(Math.abs(r.depositSaving))} on a ${depPctLabel} deposit ` +
-      `and ${Math.abs(r.yearsSaved).toFixed(1)} years of saving time.${stampInfo} ` +
-      `The first home buyer share of new lending would increase by an estimated ` +
-      `${r.fhbShareChangePp.toFixed(1)} percentage points, generating ` +
-      `$${r.revenueGainBillions.toFixed(1)}B in additional annual government revenue.${supplyNote}`;
+    return `<strong>Modelled scenario:</strong> ${reforms}${migNote}${projNote}` +
+      ` The price-to-income ratio would be ${lastWR.priceToIncome.toFixed(1)}x with reform vs ${lastNR.priceToIncome.toFixed(1)}x without.`;
   }
 
   function init() {
     Charts.init();
 
-    // CGT slider
     const slider = document.getElementById('cgtSlider');
     const sliderValue = document.getElementById('cgtSliderValue');
     slider.addEventListener('input', () => {
@@ -260,21 +296,18 @@ const UI = (() => {
       updateAll();
     });
 
-    // NG toggle
     const ngToggle = document.getElementById('ngToggle');
     ngToggle.addEventListener('change', () => {
       ngEnabled = ngToggle.checked;
       updateAll();
     });
 
-    // City select
     const citySelect = document.getElementById('citySelect');
     citySelect.addEventListener('change', () => {
       currentCity = citySelect.value;
       updateAll();
     });
 
-    // Interest rate slider
     const rateSlider = document.getElementById('rateSlider');
     const rateValue = document.getElementById('rateSliderValue');
     if (rateSlider) {
@@ -285,7 +318,6 @@ const UI = (() => {
       });
     }
 
-    // NOM slider
     const nomSlider = document.getElementById('nomSlider');
     const nomValue = document.getElementById('nomSliderValue');
     if (nomSlider) {
@@ -296,7 +328,6 @@ const UI = (() => {
       });
     }
 
-    // Household size slider
     const hhSlider = document.getElementById('householdSlider');
     const hhValue = document.getElementById('householdSliderValue');
     if (hhSlider) {
@@ -307,7 +338,6 @@ const UI = (() => {
       });
     }
 
-    // Savings slider
     const savSlider = document.getElementById('savingsSlider');
     const savValue = document.getElementById('savingsSliderValue');
     if (savSlider) {
@@ -318,13 +348,43 @@ const UI = (() => {
       });
     }
 
-    // Deposit % slider
     const depSlider = document.getElementById('depositSlider');
     const depValue = document.getElementById('depositSliderValue');
     if (depSlider) {
       depSlider.addEventListener('input', () => {
         currentDepositPct = parseInt(depSlider.value, 10) / 100;
         depValue.textContent = depSlider.value + '%';
+        updateAll();
+      });
+    }
+
+    // Projection controls
+    const horizonSlider = document.getElementById('horizonSlider');
+    const horizonValue = document.getElementById('horizonSliderValue');
+    if (horizonSlider) {
+      horizonSlider.addEventListener('input', () => {
+        currentHorizon = parseInt(horizonSlider.value, 10);
+        horizonValue.textContent = currentHorizon + ' yrs';
+        updateAll();
+      });
+    }
+
+    const pgSlider = document.getElementById('priceGrowthSlider');
+    const pgValue = document.getElementById('priceGrowthSliderValue');
+    if (pgSlider) {
+      pgSlider.addEventListener('input', () => {
+        currentPriceGrowth = parseFloat(pgSlider.value);
+        pgValue.textContent = currentPriceGrowth.toFixed(1) + '%';
+        updateAll();
+      });
+    }
+
+    const igSlider = document.getElementById('incomeGrowthSlider');
+    const igValue = document.getElementById('incomeGrowthSliderValue');
+    if (igSlider) {
+      igSlider.addEventListener('input', () => {
+        currentIncomeGrowth = parseFloat(igSlider.value);
+        igValue.textContent = currentIncomeGrowth.toFixed(1) + '%';
         updateAll();
       });
     }

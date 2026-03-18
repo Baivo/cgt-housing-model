@@ -358,6 +358,10 @@ const DATA = {
     annualHouseholdSavings: 40000,
     averageHoldingPeriodYears: 7,
     averageAnnualCapitalGrowthPct: 6.5,
-    medianHouseholdIncome: 105000
+    medianHouseholdIncome: 105000,
+    nominalIncomeGrowthPct: 3.0,
+    incomeGrowthSource: "ABS Wage Price Index long-run trend ~3% nominal",
+    projectionHorizonYears: 10,
+    baseYear: 2026
   }
 };

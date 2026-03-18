@@ -376,5 +376,213 @@ const Model = (() => {
     return results;
   }
 
-  return { compute, computeAllCities, computeSweep, calcStampDuty, mortgageCalc };
+  /**
+   * Year-by-year projection: runs two parallel scenarios (no reform vs with reform)
+   * and tracks prices, affordability, population, dwelling stock, and supply gap
+   * as they compound over time.
+   */
+  function computeProjection(cgtDiscount, ngEnabled, cityKey, interestRate, overrides) {
+    const ov = overrides || {};
+    const rate = interestRate || 0.06;
+    const city = DATA.dwellingPrices.data[cityKey];
+    const multiplier = cityKey === 'national' ? 1.0 : cityMultiplier(cityKey);
+
+    const depositPct = ov.depositPct != null ? ov.depositPct : DATA.assumptions.depositPercentage;
+    const annualSavings = ov.annualSavings != null ? ov.annualSavings : DATA.assumptions.annualHouseholdSavings;
+    const nom = ov.nom != null ? ov.nom : DATA.migration.netOverseasMigration.current;
+    const householdSize = ov.householdSize != null ? ov.householdSize : DATA.migration.housingDemand.averageHouseholdSize;
+    const horizonYears = ov.horizonYears || DATA.assumptions.projectionHorizonYears;
+    const baseGrowthRate = (ov.baseGrowthPct != null ? ov.baseGrowthPct : DATA.assumptions.averageAnnualCapitalGrowthPct) / 100;
+    const incomeGrowthRate = (ov.incomeGrowthPct != null ? ov.incomeGrowthPct : DATA.assumptions.nominalIncomeGrowthPct) / 100;
+    const baseYear = DATA.assumptions.baseYear;
+
+    const mig = DATA.migration;
+    const baselineNom = mig.netOverseasMigration.current;
+    const baselinePop = mig.priceElasticity.baselinePopulation;
+    const migElasticity = mig.priceElasticity.central;
+    const SUPPLY_GAP_COEFF = 0.5;
+    const PHASE_IN_YEARS = 5;
+
+    const baselineMigDemand = baselineNom / mig.housingDemand.averageHouseholdSize;
+    const nonMigDemand = mig.housingDemand.totalAnnualDwellingDemand - baselineMigDemand;
+    const annualMigDemand = nom / householdSize;
+    const annualTotalDemand = nonMigDemand + annualMigDemand;
+    const baselineAnnualDemand = mig.housingDemand.totalAnnualDwellingDemand;
+    const annualConstruction = mig.housingShortfall.annualConstruction2024;
+
+    // CGT reform steady-state price effect (central)
+    let reformPricePct = interpolate(cgtDiscount, CGT_PRICE_ANCHORS, 'pricePct') * multiplier;
+    if (!ngEnabled) {
+      reformPricePct += ngPriceEffect(cgtDiscount) * multiplier;
+    }
+
+    // CGT construction impact per year at full phase-in
+    const discountReduction = 50 - cgtDiscount;
+    const fullConstructionImpact = discountReduction * CONSTRUCTION_RATE_PER_PP;
+
+    // FHB share change at full phase-in
+    let fullFhbChangePp = discountReduction * FHB_SHARE_RATE_PER_PP;
+    if (!ngEnabled) {
+      fullFhbChangePp += NG_FHB_SHARE_PP * (0.5 + 0.5 * (cgtDiscount / 50));
+    }
+
+    const startPrice = city.price;
+    const startIncome = DATA.assumptions.medianHouseholdIncome;
+    const startPop = baselinePop;
+    const startStock = DATA.dwellingPrices.data.national.dwellings;
+
+    function simulate(applyReform) {
+      const years = [];
+      let price = startPrice;
+      let pop = startPop;
+      let stock = startStock;
+      let cumulativeSavings = 0;
+      let cumulativeGap = 0;
+      let hasBought = false;
+      let buyYear = null;
+
+      for (let yr = 0; yr <= horizonYears; yr++) {
+        const calendarYear = baseYear + yr;
+
+        // Population grows by NOM each year
+        if (yr > 0) pop += nom;
+
+        // Dwelling demand this year
+        const dwellingDemand = annualTotalDemand;
+
+        // Construction: base capacity, minus CGT impact if reform is being phased in
+        let construction = annualConstruction;
+        if (applyReform && yr > 0) {
+          const phaseIn = Math.min(yr / PHASE_IN_YEARS, 1.0);
+          construction += Math.round(fullConstructionImpact * phaseIn);
+        }
+
+        // Stock grows by construction
+        if (yr > 0) stock += construction;
+
+        // Annual supply gap
+        const annualGap = yr === 0 ? 0 : dwellingDemand - construction;
+        cumulativeGap += annualGap;
+
+        // Price evolution
+        if (yr > 0) {
+          // 1. Baseline capital growth
+          let yearlyGrowth = baseGrowthRate;
+
+          // 2. Migration demand pressure (incremental, each year's NOM adds to population)
+          const nomDev = nom - baselineNom;
+          if (nomDev !== 0) {
+            const annualPopChangePct = (nomDev / pop) * 100;
+            yearlyGrowth += (annualPopChangePct * migElasticity) / 100;
+          }
+
+          // 3. Supply gap scarcity pressure
+          const gapDev = dwellingDemand - construction -
+                        (baselineAnnualDemand - annualConstruction);
+          if (gapDev !== 0) {
+            yearlyGrowth += (gapDev / stock) * SUPPLY_GAP_COEFF;
+          }
+
+          // 4. CGT reform effect (phased in over 5 years)
+          if (applyReform) {
+            const phaseIn = Math.min(yr / PHASE_IN_YEARS, 1.0);
+            const prevPhaseIn = Math.min((yr - 1) / PHASE_IN_YEARS, 1.0);
+            const incrementalReform = (phaseIn - prevPhaseIn) * reformPricePct / 100;
+            yearlyGrowth += incrementalReform;
+          }
+
+          price = price * (1 + yearlyGrowth);
+        }
+
+        // Savings accumulation
+        cumulativeSavings += (yr > 0 ? annualSavings : 0);
+        const depositNeeded = price * depositPct;
+        if (!hasBought && cumulativeSavings >= depositNeeded) {
+          hasBought = true;
+          buyYear = calendarYear;
+        }
+
+        // Income
+        const income = startIncome * Math.pow(1 + incomeGrowthRate, yr);
+        const priceToIncome = price / income;
+
+        // Mortgage
+        const loanAmount = price * (1 - depositPct);
+        const monthlyPayment = mortgageCalc(loanAmount, rate, 30);
+
+        // Stamp duty
+        const stateKey = cityKey === 'national' ? 'nsw' : cityKey;
+        const duty = calcStampDuty(Math.round(price), stateKey);
+
+        // FHB share
+        const phaseIn = applyReform ? Math.min(yr / PHASE_IN_YEARS, 1.0) : 0;
+        const fhbShareChange = fullFhbChangePp * phaseIn;
+
+        years.push({
+          year: yr,
+          calendarYear,
+          price: Math.round(price),
+          priceGrowthPct: yr === 0 ? 0 : Math.round(((price / years[yr - 1].price) - 1) * 10000) / 100,
+          depositNeeded: Math.round(depositNeeded),
+          cumulativeSavings: Math.round(cumulativeSavings),
+          canBuy: hasBought,
+          stampDutyFhb: duty.fhb,
+          totalUpfront: Math.round(depositNeeded + duty.fhb),
+          monthlyPayment: Math.round(monthlyPayment),
+          income: Math.round(income),
+          priceToIncome: Math.round(priceToIncome * 10) / 10,
+          population: Math.round(pop),
+          dwellingStock: Math.round(stock),
+          annualDemand: Math.round(dwellingDemand),
+          annualConstruction: Math.round(construction),
+          annualGap: Math.round(annualGap),
+          cumulativeGap: Math.round(cumulativeGap),
+          fhbShareChange: Math.round(fhbShareChange * 10) / 10
+        });
+      }
+
+      return { years, buyYear };
+    }
+
+    const noReform = simulate(false);
+    const withReform = simulate(true);
+
+    // Year-by-year difference
+    const difference = noReform.years.map((nr, i) => {
+      const wr = withReform.years[i];
+      return {
+        calendarYear: nr.calendarYear,
+        priceDiff: nr.price - wr.price,
+        priceDiffPct: nr.price > 0 ? Math.round(((nr.price - wr.price) / nr.price) * 1000) / 10 : 0,
+        depositDiff: nr.depositNeeded - wr.depositNeeded,
+        monthlyPaymentDiff: nr.monthlyPayment - wr.monthlyPayment,
+        priceToIncomeDiff: Math.round((nr.priceToIncome - wr.priceToIncome) * 10) / 10,
+        gapDiff: nr.cumulativeGap - wr.cumulativeGap
+      };
+    });
+
+    return {
+      cityLabel: city.label,
+      noReform,
+      withReform,
+      difference,
+      horizonYears,
+      baseYear,
+      buyYearNoReform: noReform.buyYear,
+      buyYearWithReform: withReform.buyYear,
+      buyYearsSaved: noReform.buyYear && withReform.buyYear
+        ? noReform.buyYear - withReform.buyYear
+        : null,
+      finalPriceDiff: difference[difference.length - 1].priceDiff,
+      finalPriceDiffPct: difference[difference.length - 1].priceDiffPct,
+      cgtDiscount,
+      ngEnabled,
+      nom,
+      householdSize,
+      depositPctUsed: depositPct,
+      annualSavingsUsed: annualSavings
+    };
+  }
+
+  return { compute, computeAllCities, computeSweep, computeProjection, calcStampDuty, mortgageCalc };
 })();
