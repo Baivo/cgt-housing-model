@@ -8,6 +8,7 @@ const UI = (() => {
   let currentRate = 0.064;
   let currentNom = 306000;
   let currentHouseholdSize = 2.5;
+  let currentExistingSavings = 0;
   let currentSavings = 40000;
   let currentDepositPct = 0.20;
   let currentHorizon = 10;
@@ -18,6 +19,7 @@ const UI = (() => {
       nom: currentNom,
       householdSize: currentHouseholdSize,
       annualSavings: currentSavings,
+      existingSavings: currentExistingSavings,
       depositPct: currentDepositPct,
       horizonYears: currentHorizon,
       incomeGrowthPct: currentIncomeGrowth
@@ -44,9 +46,16 @@ const UI = (() => {
     el('metricMonthly').textContent = fmt(r.baseMonthlyPayment) + '/mo';
     el('metricIncomeNeeded').textContent = fmt(r.incomeNeeded);
 
-    el('metricYearsToSave').textContent = r.currentYearsToSave.toFixed(1) + ' yrs';
+    if (r.currentYearsToSave <= 0) {
+      el('metricYearsToSave').textContent = 'Ready now';
+    } else {
+      el('metricYearsToSave').textContent = r.currentYearsToSave.toFixed(1) + ' yrs';
+    }
+    const savedNote = r.existingSavingsUsed > 0
+      ? ` (${fmt(r.existingSavingsUsed)} saved)`
+      : '';
     el('metricYearsToSaveSub').textContent =
-      `At ${fmt(r.annualSavingsUsed)}/yr for ${Math.round(r.depositPctUsed * 100)}% deposit`;
+      `At ${fmt(r.annualSavingsUsed)}/yr for ${Math.round(r.depositPctUsed * 100)}% deposit${savedNote}`;
   }
 
   /* ====== Section B: What Drives Prices ====== */
@@ -181,8 +190,10 @@ const UI = (() => {
     const lastWR = proj.withReform.years[proj.withReform.years.length - 1];
     const projSaving = lastNR.price - lastWR.price;
 
+    const savedSoFar = r.existingSavingsUsed > 0 ? ` (with ${fmt(r.existingSavingsUsed)} already saved)` : '';
+    const yearsText = r.currentYearsToSave <= 0 ? 'ready now' : `taking ${r.currentYearsToSave.toFixed(1)} years to save`;
     const situationText = `The mean dwelling price in ${r.cityLabel} is <strong>${fmt(r.basePrice)}</strong>. ` +
-      `A ${depPctLabel} deposit is ${fmt(r.currentDeposit)}, taking ${r.currentYearsToSave.toFixed(1)} years to save at ${savLabel}/year. ` +
+      `A ${depPctLabel} deposit is ${fmt(r.currentDeposit)}, ${yearsText} at ${savLabel}/year${savedSoFar}. ` +
       `Price growth is running at ${r.derivedGrowthPct.toFixed(1)}% p.a. ` +
       `(${r.incomeGrowthPct.toFixed(0)}% income growth + ${r.supplyPremiumPct.toFixed(1)}% supply gap premium), ` +
       `driven by a supply gap of ${r.existingGap.toLocaleString()} dwellings/year.`;
@@ -300,6 +311,16 @@ const UI = (() => {
       hhSlider.addEventListener('input', () => {
         currentHouseholdSize = parseFloat(hhSlider.value);
         hhValue.textContent = currentHouseholdSize.toFixed(1);
+        updateAll();
+      });
+    }
+
+    const esSlider = document.getElementById('existingSavingsSlider');
+    const esValue = document.getElementById('existingSavingsSliderValue');
+    if (esSlider) {
+      esSlider.addEventListener('input', () => {
+        currentExistingSavings = parseInt(esSlider.value, 10) * 1000;
+        esValue.textContent = '$' + (currentExistingSavings / 1000) + 'K';
         updateAll();
       });
     }

@@ -76,8 +76,16 @@
     </div>
 
     <div class="controls-section">
-      <div class="controls-section-label">Your Situation</div>
-      <div class="controls-grid-4">
+      <div class="controls-section-label">Your Finances</div>
+      <div class="controls-grid">
+        <div class="control-group">
+          <label for="existingSavingsSlider">Saved So Far ($K)</label>
+          <div class="slider-container">
+            <input type="range" id="existingSavingsSlider" min="0" max="300" step="5" value="0">
+            <span class="slider-value slider-value-sm" id="existingSavingsSliderValue">$0K</span>
+          </div>
+        </div>
+
         <div class="control-group">
           <label for="savingsSlider">Annual Savings ($K)</label>
           <div class="slider-container">
@@ -93,7 +101,12 @@
             <span class="slider-value slider-value-sm" id="depositSliderValue">20%</span>
           </div>
         </div>
+      </div>
+    </div>
 
+    <div class="controls-section">
+      <div class="controls-section-label">Market Parameters</div>
+      <div class="controls-grid-2">
         <div class="control-group">
           <label for="nomSlider">Net Overseas Migration</label>
           <div class="slider-container">
@@ -657,10 +670,10 @@
   </div>
 </footer>
 
-<script src="js/data.js?v=8"></script>
-<script src="js/model.js?v=8"></script>
-<script src="js/charts.js?v=8"></script>
-<script src="js/ui.js?v=8"></script>
+<script src="js/data.js?v=9"></script>
+<script src="js/model.js?v=9"></script>
+<script src="js/charts.js?v=9"></script>
+<script src="js/ui.js?v=9"></script>
 
 </body>
 </html>

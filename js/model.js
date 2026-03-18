@@ -153,6 +153,7 @@ const Model = (() => {
 
     const depositPct = ov.depositPct != null ? ov.depositPct : DATA.assumptions.depositPercentage;
     const annualSavings = ov.annualSavings != null ? ov.annualSavings : DATA.assumptions.annualHouseholdSavings;
+    const existingSavings = ov.existingSavings != null ? ov.existingSavings : 0;
     const nom = ov.nom != null ? ov.nom : DATA.migration.netOverseasMigration.current;
     const householdSize = ov.householdSize != null ? ov.householdSize : DATA.migration.housingDemand.averageHouseholdSize;
     const incomeGrowthRate = (ov.incomeGrowthPct != null ? ov.incomeGrowthPct : DATA.assumptions.nominalIncomeGrowthPct) / 100;
@@ -176,12 +177,14 @@ const Model = (() => {
     const newPriceLow = basePrice * (1 + highPct / 100);
     const newPriceHigh = basePrice * (1 + lowPct / 100);
 
-    // Deposit
+    // Deposit (accounting for existing savings)
     const currentDeposit = basePrice * depositPct;
     const newDeposit = newPrice * depositPct;
     const depositSaving = currentDeposit - newDeposit;
-    const currentYearsToSave = currentDeposit / annualSavings;
-    const newYearsToSave = newDeposit / annualSavings;
+    const remainingForCurrent = Math.max(0, currentDeposit - existingSavings);
+    const remainingForNew = Math.max(0, newDeposit - existingSavings);
+    const currentYearsToSave = annualSavings > 0 ? remainingForCurrent / annualSavings : Infinity;
+    const newYearsToSave = annualSavings > 0 ? remainingForNew / annualSavings : Infinity;
     const yearsSaved = currentYearsToSave - newYearsToSave;
 
     // Stamp duty
@@ -258,7 +261,8 @@ const Model = (() => {
       nom,
       householdSize,
       depositPctUsed: depositPct,
-      annualSavingsUsed: annualSavings
+      annualSavingsUsed: annualSavings,
+      existingSavingsUsed: existingSavings
     };
   }
 
@@ -289,6 +293,7 @@ const Model = (() => {
 
     const depositPct = ov.depositPct != null ? ov.depositPct : DATA.assumptions.depositPercentage;
     const annualSavings = ov.annualSavings != null ? ov.annualSavings : DATA.assumptions.annualHouseholdSavings;
+    const existingSavings = ov.existingSavings != null ? ov.existingSavings : 0;
     const nom = ov.nom != null ? ov.nom : DATA.migration.netOverseasMigration.current;
     const householdSize = ov.householdSize != null ? ov.householdSize : DATA.migration.housingDemand.averageHouseholdSize;
     const horizonYears = ov.horizonYears || DATA.assumptions.projectionHorizonYears;
@@ -317,7 +322,7 @@ const Model = (() => {
       let price = startPrice;
       let pop = startPop;
       let stock = startStock;
-      let cumulativeSavings = 0;
+      let cumulativeSavings = existingSavings;
       let cumulativeGap = 0;
       let hasBought = false;
       let buyYear = null;
