@@ -235,6 +235,22 @@ const Model = (() => {
     const constructionImpactAnnual = Math.round(discountReduction * CONSTRUCTION_RATE_PER_PP);
     const rentImpactWeekly = Math.round(discountReduction * RENT_RATE_PER_PP * 100) / 100;
 
+    // --- Migration context ---
+    const mig = DATA.migration;
+    const migrationDwellingDemand = mig.housingDemand.annualDwellingDemandFromMigration;
+    const totalDwellingDemand = mig.housingDemand.totalAnnualDwellingDemand;
+    const currentConstruction = mig.housingShortfall.annualConstruction2024;
+    const existingGap = totalDwellingDemand - currentConstruction;
+    const constructionAsPctOfGap = existingGap > 0
+      ? Math.round((Math.abs(constructionImpactAnnual) / existingGap) * 1000) / 10
+      : 0;
+    const constructionAsPctOfMigDemand = migrationDwellingDemand > 0
+      ? Math.round((Math.abs(constructionImpactAnnual) / migrationDwellingDemand) * 1000) / 10
+      : 0;
+    const constructionAsPctOfTotal = currentConstruction > 0
+      ? Math.round((Math.abs(constructionImpactAnnual) / currentConstruction) * 1000) / 10
+      : 0;
+
     // --- Phase-in timeline (5 years, Grattan approach) ---
     const phaseIn = [];
     for (let yr = 0; yr <= 5; yr++) {
@@ -283,6 +299,13 @@ const Model = (() => {
       baseMonthlyPayment: Math.round(baseMonthlyPayment),
       constructionImpactAnnual,
       rentImpactWeekly,
+      migrationDwellingDemand,
+      totalDwellingDemand,
+      currentConstruction,
+      existingGap,
+      constructionAsPctOfGap,
+      constructionAsPctOfMigDemand,
+      constructionAsPctOfTotal,
       phaseIn,
       interestRate: rate,
       cgtDiscount,

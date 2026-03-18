@@ -147,6 +147,25 @@
       <div class="metric-value" id="metricRent">$0</div>
       <div class="metric-sub">Estimated change in median weekly rent</div>
     </div>
+    <div class="metric-card">
+      <div class="metric-label">Migration Dwelling Demand <span class="vintage-badge">ABS 2024-25</span></div>
+      <div class="metric-value" id="metricMigDemand">0/yr</div>
+      <div class="metric-sub">NOM 306,000 / 2.5 persons per dwelling</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Existing Supply Gap <span class="vintage-badge">NHSAC 2025</span></div>
+      <div class="metric-value" id="metricSupplyGap">0/yr</div>
+      <div class="metric-sub">Demand (223K) minus construction (177K)</div>
+    </div>
+  </section>
+
+  <!-- ====== Row 4: CGT reform in migration context ====== -->
+  <section class="metrics-grid" style="margin-top: 0;">
+    <div class="metric-card" style="grid-column: span 2;">
+      <div class="metric-label">CGT Reform Supply Impact as % of Existing Gap</div>
+      <div class="metric-value" id="metricCgtVsGap">0%</div>
+      <div class="metric-sub" id="metricCgtVsGapNote">No CGT reform selected</div>
+    </div>
   </section>
 
   <!-- ====== Charts ====== -->
@@ -310,13 +329,33 @@
         <li>Serviceability threshold: 30% of gross income</li>
       </ul>
 
+      <h4>Migration and Population Context</h4>
+      <p>
+        <strong>v2.1 addition:</strong> The model now contextualises the CGT reform's supply-side impact against
+        migration-driven housing demand. Net overseas migration (NOM) was 306,000 in 2024-25 (ABS), driving demand
+        for approximately 122,400 dwellings/year (at 2.5 persons per dwelling). The total annual dwelling demand is
+        approximately 223,000 (NHSAC 2025), while actual construction delivered approximately 177,000 homes in 2024,
+        creating an existing supply gap of ~46,000 dwellings/year.
+      </p>
+      <p>
+        The CGT reform's estimated construction reduction (~2,000 homes/year at 25% discount) represents approximately
+        4.3% of this existing gap. This context shows that while the reform has a modest negative supply effect, it is
+        small relative to the structural supply shortage driven primarily by migration and construction capacity constraints.
+      </p>
+      <p>
+        State-level migration-induced shortfalls (IPA, 2022-2024): WA 52,783; QLD 48,737; NSW 44,533; VIC 32,244;
+        SA 6,732. Tasmania had a surplus of 6,541. The National Housing Accord targets 1.2 million homes by 2029,
+        but only 938,000 are expected to be delivered (shortfall of 262,000).
+      </p>
+
       <h4>Remaining Limitations</h4>
       <ul>
         <li>Uses piecewise linear interpolation calibrated to published estimates, not a full general equilibrium model</li>
         <li>Supply-side estimates are scaled linearly from a single calibration point (Grattan, 25% discount); actual supply responses may be non-linear</li>
         <li>Stamp duty schedules are simplified approximations; actual duty may vary based on property type, eligibility, and concession changes</li>
         <li>Does not model state-level land tax or planning regulation differences beyond stamp duty</li>
-        <li>Does not model migration patterns, foreign investment, or population growth effects</li>
+        <li>Migration context uses current NOM levels; future migration policy changes would alter demand projections</li>
+        <li>Does not model foreign investment restrictions or their interaction with CGT reform</li>
         <li>City-level investor shares are estimates derived from ABS lending patterns (confidence: moderate)</li>
         <li>Phase-in timeline assumes linear adjustment; actual market adjustment may be front-loaded or delayed</li>
       </ul>
@@ -443,6 +482,28 @@
         </tbody>
       </table>
 
+      <h4>Migration and Housing Demand <span class="vintage-badge">2024-25</span></h4>
+      <table class="data-table">
+        <thead><tr><th>Metric</th><th class="num">Value</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Net overseas migration (2024-25)</td><td class="num">306,000</td><td><a class="source-link" href="https://www.abs.gov.au/statistics/people/population/overseas-migration/2024-25" target="_blank" rel="noopener">ABS</a></td></tr>
+          <tr><td>Average household size</td><td class="num">~2.5 persons</td><td><a class="source-link" href="https://abs.gov.au/statistics/people/population/household-and-family-projections-australia/latest-release" target="_blank" rel="noopener">ABS</a></td></tr>
+          <tr><td>Migration dwelling demand</td><td class="num">~122,400/yr</td><td>Derived: 306K / 2.5</td></tr>
+          <tr><td>Total annual dwelling demand</td><td class="num">~223,000</td><td><a class="source-link" href="https://nhsac.gov.au/index.php/news/release-state-housing-system-report-2025" target="_blank" rel="noopener">NHSAC 2025</a></td></tr>
+          <tr><td>Actual construction (2024)</td><td class="num">~177,000</td><td>NHSAC 2025</td></tr>
+          <tr><td>Annual supply gap</td><td class="num">~46,000</td><td>Demand minus construction</td></tr>
+          <tr><td>Cumulative shortfall (2022-24)</td><td class="num">179,287</td><td><a class="source-link" href="https://ipa.org.au/publications-ipa/research-note/analysis-of-migration-induced-housing-shortfall-since-2022" target="_blank" rel="noopener">IPA</a></td></tr>
+          <tr><td>Housing Accord target</td><td class="num">1.2M (5yr)</td><td><a class="source-link" href="https://treasury.gov.au/housing-policy/accord" target="_blank" rel="noopener">Treasury</a></td></tr>
+          <tr><td>Expected delivery</td><td class="num">938,000</td><td>NHSAC forecast</td></tr>
+          <tr><td>Accord shortfall</td><td class="num">262,000</td><td>NHSAC 2025</td></tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>State-level migration-induced shortfalls (2022-2024):</strong>
+        WA: 52,783 | QLD: 48,737 | NSW: 44,533 | VIC: 32,244 | SA: 6,732 | TAS: -6,541 (surplus)<br>
+        <a class="source-link" href="https://ipa.org.au/publications-ipa/research-note/analysis-of-migration-induced-housing-shortfall-since-2022" target="_blank" rel="noopener">IPA: Analysis of migration-induced housing shortfall</a>
+      </p>
+
       <h4>Interest Rate Data <span class="vintage-badge">Feb 2026</span></h4>
       <p>
         RBA cash rate: 3.85% (Feb 2026). Typical variable mortgage rates: ~6.0-6.5%.<br>
@@ -523,6 +584,11 @@
             <td>City investor shares as estimates</td>
             <td>Marked with confidence level; exact state breakdowns require ABS microdata not publicly available</td>
             <td>Documented</td>
+          </tr>
+          <tr>
+            <td>No migration / population context</td>
+            <td>Added ABS migration data (NOM 306K), NHSAC housing demand (223K/yr), existing supply gap (46K/yr), and contextualisation showing CGT reform's construction impact as % of these demand drivers</td>
+            <td>Addressed</td>
           </tr>
         </tbody>
       </table>

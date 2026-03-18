@@ -210,6 +210,61 @@ const DATA = {
     vintage: "2024"
   },
 
+  migration: {
+    source: "ABS Overseas Migration, 2024-25; National Housing Supply and Affordability Council; IPA analysis",
+    vintage: "2024-25",
+    netOverseasMigration: {
+      current: 306000,
+      previousYear: 429000,
+      longTermProjection: 235000,
+      source: "ABS Overseas Migration, 2024-25 financial year",
+      sourceUrl: "https://www.abs.gov.au/statistics/people/population/overseas-migration/2024-25",
+      note: "NOM 306,000 in 2024-25, down from 429,000. Long-term projection: 235,000/year."
+    },
+    housingDemand: {
+      averageHouseholdSize: 2.5,
+      householdSizeSource: "ABS Household and Family Projections (declining from ~2.5 toward 2.2-2.3)",
+      householdSizeSourceUrl: "https://abs.gov.au/statistics/people/population/household-and-family-projections-australia/latest-release",
+      annualDwellingDemandFromMigration: 122400,
+      annualDwellingDemandNote: "306,000 NOM / 2.5 persons per dwelling = ~122,400 dwellings/year from migration alone",
+      totalAnnualDwellingDemand: 223000,
+      totalDemandSource: "National Housing Supply and Affordability Council, 2025",
+      totalDemandSourceUrl: "https://nhsac.gov.au/index.php/news/release-state-housing-system-report-2025"
+    },
+    housingShortfall: {
+      cumulativeShortfall2022to2024: 179287,
+      annualShortfall2024: 19570,
+      annualConstruction2024: 177000,
+      source: "IPA, Analysis of migration-induced housing shortfall since 2022",
+      sourceUrl: "https://ipa.org.au/publications-ipa/research-note/analysis-of-migration-induced-housing-shortfall-since-2022",
+      stateShortfalls: {
+        nsw: 44533,
+        vic: 32244,
+        qld: 48737,
+        sa: 6732,
+        wa: 52783,
+        tas: -6541
+      },
+      note: "Between 2022-2024, NOM was responsible for 81% of population growth, creating a cumulative 179,287 dwelling shortfall."
+    },
+    nationalHousingAccord: {
+      target5yr: 1200000,
+      expectedDelivery: 938000,
+      shortfall: 262000,
+      period: "mid-2024 to June 2029",
+      source: "Treasury / National Housing Accord",
+      sourceUrl: "https://treasury.gov.au/housing-policy/accord",
+      note: "No state or territory is forecast to meet its share of the 1.2M target."
+    },
+    populationProjection: {
+      population2036: 31500000,
+      growthOver11yr: 3860000,
+      capitalCitySharePct: 80,
+      source: "Centre for Population, Population Statement 2025",
+      sourceUrl: "https://www.step.org.au/index.php/component/k2/item/770-population-statement-2025"
+    }
+  },
+
   supplyImpact: {
     source: "Grattan Institute (2025)",
     sourceUrl: "https://grattan.edu.au/news/reforming-the-capital-gains-tax/",

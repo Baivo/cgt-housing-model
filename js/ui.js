@@ -103,6 +103,21 @@ const UI = (() => {
         : '+$' + result.rentImpactWeekly.toFixed(2) + '/wk';
     document.getElementById('metricRent').className =
       'metric-value ' + (result.rentImpactWeekly > 0 ? 'negative' : '');
+
+    // Migration context
+    document.getElementById('metricMigDemand').textContent =
+      result.migrationDwellingDemand.toLocaleString() + '/yr';
+
+    document.getElementById('metricSupplyGap').textContent =
+      result.existingGap.toLocaleString() + '/yr';
+    document.getElementById('metricSupplyGap').className = 'metric-value negative';
+
+    document.getElementById('metricCgtVsGap').textContent =
+      result.constructionAsPctOfGap.toFixed(1) + '%';
+    document.getElementById('metricCgtVsGapNote').textContent =
+      result.constructionImpactAnnual === 0
+        ? 'No CGT reform selected'
+        : `CGT reform impact (${Math.abs(result.constructionImpactAnnual).toLocaleString()} homes) is ${result.constructionAsPctOfGap.toFixed(1)}% of the existing ${result.existingGap.toLocaleString()}/yr supply gap`;
   }
 
   function updateAll() {
@@ -151,7 +166,10 @@ const UI = (() => {
     if (r.constructionImpactAnnual !== 0) {
       supplyNote = ` The Grattan Institute estimates this could reduce new construction by approximately ` +
         `${Math.abs(r.constructionImpactAnnual).toLocaleString()} homes/year, with a rent impact of ` +
-        `approximately $${r.rentImpactWeekly.toFixed(2)}/week.`;
+        `approximately $${r.rentImpactWeekly.toFixed(2)}/week. For context, net overseas migration currently ` +
+        `drives demand for ~${r.migrationDwellingDemand.toLocaleString()} dwellings/year, and the existing ` +
+        `supply gap is ~${r.existingGap.toLocaleString()}/year — the CGT reform's construction impact ` +
+        `represents just ${r.constructionAsPctOfGap.toFixed(1)}% of this gap.`;
     }
 
     return `<strong>Modelled scenario:</strong> ${reforms} would reduce ${r.cityLabel} ` +
