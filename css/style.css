@@ -87,6 +87,13 @@ header .badge {
   align-items: end;
 }
 
+.controls-grid-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 1.5rem;
+  align-items: end;
+}
+
 .control-group label {
   display: block;
   font-size: 0.8rem;
@@ -451,6 +458,30 @@ select:focus {
   text-decoration: underline;
 }
 
+/* ---- Vintage Badges ---- */
+.vintage-badge {
+  display: inline-block;
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--amber);
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  margin-left: 0.25rem;
+}
+
+.range-note {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.positive-text {
+  color: var(--positive) !important;
+}
+
 /* ---- Footer ---- */
 footer {
   border-top: 1px solid var(--border);
@@ -472,7 +503,8 @@ footer a:hover {
 
 /* ---- Responsive ---- */
 @media (max-width: 900px) {
-  .controls-grid {
+  .controls-grid,
+  .controls-grid-4 {
     grid-template-columns: 1fr;
   }
 

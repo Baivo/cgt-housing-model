@@ -12,12 +12,13 @@
 
 <header>
   <div class="container">
-    <span class="badge">Interactive Policy Model</span>
+    <span class="badge">Interactive Policy Model v2</span>
     <h1>Capital Gains Tax Discount: Impact on Housing Availability for First Home Buyers</h1>
     <p class="subtitle">
       Explore how varying Australia's 50% CGT discount and negative gearing policy affects dwelling prices,
-      deposit requirements, and first home buyer market share. Model calibrated to published estimates from
-      Australian Treasury, Grattan Institute, e61 Institute, and academic research.
+      deposit requirements, stamp duty, mortgage costs, and first home buyer market share. Model calibrated to
+      published estimates from Australian Treasury, Grattan Institute, e61 Institute, and academic research.
+      Outputs include confidence bands showing the range of institutional estimates.
     </p>
   </div>
 </header>
@@ -26,7 +27,7 @@
 
   <!-- ====== Controls ====== -->
   <section class="controls">
-    <div class="controls-grid">
+    <div class="controls-grid-4">
       <div class="control-group">
         <label for="cgtSlider">CGT Discount</label>
         <div class="slider-container">
@@ -60,6 +61,14 @@
           <option value="act">Canberra (ACT)</option>
         </select>
       </div>
+
+      <div class="control-group">
+        <label for="rateSlider">Mortgage Rate</label>
+        <div class="slider-container">
+          <input type="range" id="rateSlider" min="3.5" max="8.5" step="0.1" value="6.0">
+          <span class="slider-value" id="rateSliderValue">6.0%</span>
+        </div>
+      </div>
     </div>
 
     <div class="presets">
@@ -73,18 +82,19 @@
   <!-- ====== Summary ====== -->
   <div class="summary-box" id="scenarioSummary"></div>
 
-  <!-- ====== Metric Cards ====== -->
+  <!-- ====== Row 1: Price + Affordability ====== -->
   <section class="metrics-grid">
     <div class="metric-card">
-      <div class="metric-label">Price Change</div>
+      <div class="metric-label">Price Change <span class="vintage-badge">Central</span></div>
       <div class="metric-value" id="metricPriceChange">0%</div>
+      <div class="metric-sub" id="metricPriceRange"></div>
       <div class="metric-sub"><span id="metricNewPrice"></span></div>
       <div class="metric-sub"><span id="metricBasePrice"></span></div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Deposit Saving (20%)</div>
       <div class="metric-value" id="metricDepositSaving">$0</div>
-      <div class="metric-sub"><span id="metricYearsSaved"></span> saving time</div>
+      <div class="metric-sub"><span id="metricYearsSaved" class="metric-value"></span> saving time</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">FHB Market Share Change</div>
@@ -99,8 +109,25 @@
     </div>
   </section>
 
-  <!-- ====== Additional metrics row ====== -->
+  <!-- ====== Row 2: Stamp duty + Mortgage + Supply ====== -->
   <section class="metrics-grid" style="margin-top: 0;">
+    <div class="metric-card">
+      <div class="metric-label">FHB Stamp Duty <span class="vintage-badge">2026</span></div>
+      <div class="metric-value" id="metricStampDuty">$0</div>
+      <div class="metric-sub" id="metricStampDutyBase"></div>
+      <div class="metric-sub" id="metricStampDutyNote"></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Total Upfront (Deposit + Duty)</div>
+      <div class="metric-value" id="metricTotalUpfront">$0</div>
+      <div class="metric-sub" id="metricTotalUpfrontSaving"></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Monthly Mortgage</div>
+      <div class="metric-value" id="metricMonthly">$0/mo</div>
+      <div class="metric-sub" id="metricMonthlyBase"></div>
+      <div class="metric-sub">Income needed: <span id="metricIncomeNeeded"></span></div>
+    </div>
     <div class="metric-card">
       <div class="metric-label">Investor Return Reduction</div>
       <div class="metric-value" id="metricReturnReduction">0%</div>
@@ -108,11 +135,25 @@
     </div>
   </section>
 
+  <!-- ====== Row 3: Supply-side ====== -->
+  <section class="metrics-grid" style="margin-top: 0;">
+    <div class="metric-card">
+      <div class="metric-label">Construction Impact <span class="vintage-badge">Grattan est.</span></div>
+      <div class="metric-value" id="metricConstruction">0</div>
+      <div class="metric-sub">Homes per year (estimated)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Rent Impact <span class="vintage-badge">Grattan est.</span></div>
+      <div class="metric-value" id="metricRent">$0</div>
+      <div class="metric-sub">Estimated change in median weekly rent</div>
+    </div>
+  </section>
+
   <!-- ====== Charts ====== -->
   <section class="charts-grid">
     <div class="chart-card">
-      <h3>Housing Price Impact by City</h3>
-      <p class="chart-desc">Estimated price change at the selected CGT discount level. Cities with higher investor concentrations see larger effects.</p>
+      <h3>Housing Price Impact by City <span class="vintage-badge">with confidence range</span></h3>
+      <p class="chart-desc">Central estimate with upper/lower bounds showing the range between conservative (Grattan) and upper (Treasury) estimates. Cities with higher investor concentrations see larger effects.</p>
       <div class="chart-wrap">
         <canvas id="priceChart"></canvas>
       </div>
@@ -120,7 +161,7 @@
 
     <div class="chart-card">
       <h3>First Home Buyer Affordability</h3>
-      <p class="chart-desc">Deposit required and years to save across the full CGT discount range (50% to 0%). Assumes 20% deposit and $40K annual savings.</p>
+      <p class="chart-desc">Deposit, stamp duty, and total upfront costs across the CGT discount range. Now includes state-specific stamp duty with FHB exemptions. Years to save assumes $40K/year.</p>
       <div class="chart-wrap">
         <canvas id="affordChart"></canvas>
       </div>
@@ -141,6 +182,22 @@
         <canvas id="revenueChart"></canvas>
       </div>
     </div>
+
+    <div class="chart-card">
+      <h3>5-Year Phase-In Timeline <span class="vintage-badge">Grattan approach</span></h3>
+      <p class="chart-desc">Estimated gradual price adjustment over 5 years using Grattan Institute's recommended phase-in approach rather than immediate implementation. Shows how prices and FHB share change during transition.</p>
+      <div class="chart-wrap">
+        <canvas id="phaseChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Supply-Side Impact <span class="vintage-badge">Grattan est.</span></h3>
+      <p class="chart-desc">Estimated effect on new housing construction and median rents. At 25% discount, Grattan estimates ~2,000 fewer homes/year and &lt;$1/week rent increase. Values scaled linearly from this anchor.</p>
+      <div class="chart-wrap">
+        <canvas id="supplyChart"></canvas>
+      </div>
+    </div>
   </section>
 
   <!-- ====== Methodology ====== -->
@@ -155,12 +212,27 @@
       <p>
         This model estimates the impact of changes to Australia's capital gains tax (CGT) discount on housing
         prices, first home buyer affordability, and government revenue. It uses <strong>piecewise linear interpolation</strong>
-        between published estimates from multiple independent Australian research institutions.
+        between published estimates from multiple independent Australian research institutions, with
+        <strong>confidence bands</strong> showing the range of estimates.
       </p>
+
+      <h4>Confidence Bands</h4>
       <p>
-        The model is <strong>not</strong> a general equilibrium model. It provides indicative estimates based on
-        the best available published research, intended to illustrate the direction and approximate magnitude of
-        policy impacts. Users should treat the outputs as estimates within a range of uncertainty.
+        All price impact estimates are presented with three scenarios reflecting the range of published research:
+      </p>
+      <table class="data-table">
+        <thead>
+          <tr><th>Scenario</th><th>Basis</th><th>Scaling</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Lower bound (conservative)</td><td>Grattan-aligned: &lt;1% at 25% discount</td><td>0.6&times; central</td></tr>
+          <tr><td>Central estimate</td><td>Midpoint of published estimates</td><td>1.0&times;</td></tr>
+          <tr><td>Upper bound</td><td>Treasury-aligned: 4.5% combined max</td><td>1.4&times; central</td></tr>
+        </tbody>
+      </table>
+      <p>
+        This approach transparently shows users the uncertainty in the estimates rather than presenting
+        a single point estimate. The true impact likely falls within this range.
       </p>
 
       <h4>CGT Discount Mechanism</h4>
@@ -168,58 +240,62 @@
         The CGT discount allows individuals and trusts to reduce their taxable capital gain by 50% for assets held
         longer than 12 months. Introduced on 21 September 1999, it replaced the previous cost-base indexation method.
         The effective tax rate on capital gains is: <code>effective_rate = marginal_rate &times; (1 - discount%)</code>.
-        For a typical investor at the 39% marginal rate, the current effective CGT rate is approximately 19.5%.
+      </p>
+
+      <h4>Non-Linear CGT &times; Negative Gearing Interaction</h4>
+      <p>
+        <strong>v2 improvement:</strong> The model now uses a <strong>multiplicative interaction</strong> between CGT
+        and negative gearing, replacing the v1 additive approximation. The reasoning: when the CGT discount is high (50%),
+        investors rely heavily on negative gearing to fund holding costs while waiting for tax-advantaged capital gains.
+        Removing NG at full CGT discount has maximum effect. When CGT discount is already reduced, capital gains
+        strategies are less attractive, so removing NG has a smaller incremental effect.
+      </p>
+      <p>Formula: <code>NG_effect = base_NG_effect &times; (0.5 + 0.5 &times; CGT_discount / 50)</code></p>
+
+      <h4>Stamp Duty Calculation</h4>
+      <p>
+        <strong>v2 addition:</strong> State-specific stamp duty is now calculated using simplified graduated rate
+        schedules from each state's revenue office. First home buyer exemptions and concessions are applied where
+        applicable. This shows users the <strong>total upfront cost</strong> (deposit + stamp duty) rather than
+        deposit alone, giving a more realistic picture of barriers to entry.
+      </p>
+
+      <h4>Interest Rate Sensitivity</h4>
+      <p>
+        <strong>v2 addition:</strong> Users can now vary the mortgage interest rate (3.5% to 8.5%) to see how
+        rate changes interact with price changes. Monthly mortgage payments and income needed for serviceability
+        (at 30% of income) update in real time. The RBA cash rate is 3.85% as of February 2026, with typical
+        variable mortgage rates around 6.0-6.5%.
+      </p>
+
+      <h4>Supply-Side Impact</h4>
+      <p>
+        <strong>v2 addition:</strong> The model now estimates the effect on new housing construction and rents,
+        calibrated to the Grattan Institute's estimate of approximately 10,000 fewer homes over 5 years (2,000/year)
+        at a 25% discount level, with a rent impact of less than $1 per week. These are scaled linearly for other
+        discount levels. The Grattan Institute notes this supply impact could be more than offset if even a small
+        portion of the reform revenue were directed to social housing or planning reform.
+      </p>
+
+      <h4>Phase-In Timeline</h4>
+      <p>
+        <strong>v2 addition:</strong> Rather than showing only the steady-state outcome, the model now includes
+        a 5-year phase-in timeline based on the Grattan Institute's recommendation of gradual implementation rather
+        than grandfathering. This shows how price adjustments and FHB share changes would unfold over time, giving
+        a more realistic picture of the transition.
       </p>
 
       <h4>Price Impact Calibration</h4>
-      <p>The model interpolates housing price impacts between these published estimates:</p>
       <table class="data-table">
         <thead>
-          <tr><th>CGT Discount</th><th>Est. Price Impact</th><th>Source</th></tr>
+          <tr><th>CGT Discount</th><th>Lower Bound</th><th>Central</th><th>Upper Bound</th><th>Source</th></tr>
         </thead>
         <tbody>
-          <tr><td>50% (current)</td><td class="num">0% (baseline)</td><td>—</td></tr>
-          <tr><td>25%</td><td class="num">-1.0%</td><td>Grattan Institute (2025)</td></tr>
-          <tr><td>0%</td><td class="num">-3.2%</td><td>Derived from Treasury (2025): -4.5% combined, ~70% attributed to CGT</td></tr>
+          <tr><td>50% (current)</td><td class="num">0%</td><td class="num">0%</td><td class="num">0%</td><td>Baseline</td></tr>
+          <tr><td>25%</td><td class="num">-0.6%</td><td class="num">-1.0%</td><td class="num">-1.4%</td><td>Grattan / Treasury range</td></tr>
+          <tr><td>0%</td><td class="num">-1.9%</td><td class="num">-3.2%</td><td class="num">-4.5%</td><td>Treasury (combined), scaled</td></tr>
         </tbody>
       </table>
-      <p>
-        Treasury modelling found that combined reform of CGT and negative gearing would reduce house prices by a
-        maximum of 4.5%. The Grattan Institute estimated that reducing the discount to 25% alone would reduce prices
-        by less than 1%. These estimates are consistent and form a credible range for interpolation.
-      </p>
-
-      <h4>City-Level Adjustment</h4>
-      <p>
-        National price impacts are adjusted for each city using an <strong>investor concentration multiplier</strong>.
-        Cities with a higher share of investor lending relative to the national average are assumed to be more
-        sensitive to CGT changes. The multiplier is calculated as:
-        <code>multiplier = city_investor_share / national_investor_share</code>.
-        For example, Sydney (NSW) has approximately 43% investor share versus the 40.4% national average,
-        giving a multiplier of approximately 1.06.
-      </p>
-
-      <h4>Negative Gearing Interaction</h4>
-      <p>
-        When negative gearing is toggled off, an additional price reduction of approximately 1.3% is applied
-        (derived from Treasury's combined estimate of -4.5% minus the CGT-only estimate of -3.2%). Additional
-        revenue of approximately $5.0B is added, and the FHB market share impact increases by 2.2 percentage points.
-        This is a simplified additive approximation; in reality, CGT and negative gearing interact non-linearly.
-      </p>
-
-      <h4>First Home Buyer Metrics</h4>
-      <ul>
-        <li><strong>Deposit required:</strong> 20% of the modelled dwelling price</li>
-        <li><strong>Years to save:</strong> Deposit divided by assumed annual household savings of $40,000</li>
-        <li><strong>Market share change:</strong> Calibrated to Warlters (2022) finding of +4.7pp owner-occupied share increase from halving the CGT discount and removing negative gearing, with approximately 2.5pp attributed to CGT alone. This gives a rate of approximately 0.1pp per 1pp reduction in the CGT discount.</li>
-      </ul>
-
-      <h4>Revenue Impact</h4>
-      <p>
-        Revenue estimates are interpolated between the Grattan Institute (+$6.5B/year at 25% discount) and
-        e61 Institute (+$2.85B/year at 33% discount). The current CGT discount costs the federal budget an
-        estimated $19.7 billion annually (Treasury Tax Expenditures and Insights Statement 2024-25).
-      </p>
 
       <h4>Key Assumptions</h4>
       <ul>
@@ -229,21 +305,35 @@
         <li>Deposit percentage: 20%</li>
         <li>Annual household savings rate: $40,000</li>
         <li>Median household income: $105,000</li>
-        <li>Mortgage interest rate: 6.0% (for serviceability calculations)</li>
+        <li>Default mortgage rate: 6.0% (adjustable via slider)</li>
         <li>Loan term: 30 years</li>
+        <li>Serviceability threshold: 30% of gross income</li>
       </ul>
 
-      <h4>Limitations</h4>
+      <h4>Remaining Limitations</h4>
       <ul>
-        <li>Uses simplified linear interpolation between published estimates, not a full general equilibrium model</li>
-        <li>CGT and negative gearing interact non-linearly; the additive approximation is a simplification</li>
-        <li>Published estimates vary significantly between institutions (Grattan: &lt;1%, Treasury: up to 4.5%)</li>
-        <li>Does not account for supply-side responses (e.g. changes to housing construction)</li>
-        <li>Does not account for state-level stamp duty, land tax, or planning regulations</li>
-        <li>Does not model macroeconomic conditions, interest rate changes, or migration patterns</li>
-        <li>City-level investor shares are estimates derived from ABS lending patterns, not exact figures</li>
-        <li>Data points span different years (2022-23 tax stats, 2025 lending/price data) and may not perfectly align</li>
-        <li>The model assumes static behaviour; in practice, policy changes would trigger dynamic market responses over time</li>
+        <li>Uses piecewise linear interpolation calibrated to published estimates, not a full general equilibrium model</li>
+        <li>Supply-side estimates are scaled linearly from a single calibration point (Grattan, 25% discount); actual supply responses may be non-linear</li>
+        <li>Stamp duty schedules are simplified approximations; actual duty may vary based on property type, eligibility, and concession changes</li>
+        <li>Does not model state-level land tax or planning regulation differences beyond stamp duty</li>
+        <li>Does not model migration patterns, foreign investment, or population growth effects</li>
+        <li>City-level investor shares are estimates derived from ABS lending patterns (confidence: moderate)</li>
+        <li>Phase-in timeline assumes linear adjustment; actual market adjustment may be front-loaded or delayed</li>
+      </ul>
+
+      <h4>Data Vintage</h4>
+      <p>
+        Different data points in this model come from different reference periods. Look for <span class="vintage-badge">vintage badges</span>
+        throughout the interface indicating the source period. Key vintages:
+      </p>
+      <ul>
+        <li>Dwelling prices: ABS, December Quarter 2025 (released March 2026)</li>
+        <li>Lending data: ABS, December Quarter 2025 (released February 2026)</li>
+        <li>CGT cost: Treasury TEIS, 2024-25</li>
+        <li>Tax statistics: ATO, 2022-23</li>
+        <li>Research estimates: Various, 2022-2025</li>
+        <li>Stamp duty rates: State revenue offices, March 2026</li>
+        <li>Interest rates: RBA, February 2026</li>
       </ul>
     </div>
   </section>
@@ -256,7 +346,7 @@
     </button>
     <div class="accordion-content" id="dataSourcesContent">
 
-      <h4>ABS Total Value of Dwellings (December Quarter 2025)</h4>
+      <h4>ABS Total Value of Dwellings <span class="vintage-badge">Dec 2025</span></h4>
       <p>
         Mean dwelling prices by state/territory. Released 10 March 2026.<br>
         <a class="source-link" href="https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/total-value-dwellings/dec-quarter-2025" target="_blank" rel="noopener">
@@ -280,7 +370,7 @@
         </tbody>
       </table>
 
-      <h4>ABS Lending Indicators (December Quarter 2025)</h4>
+      <h4>ABS Lending Indicators <span class="vintage-badge">Dec 2025</span></h4>
       <p>
         Seasonally adjusted new loan commitments. Released 11 February 2026.<br>
         <a class="source-link" href="https://www.abs.gov.au/statistics/economy/finance/lending-indicators/dec-quarter-2025" target="_blank" rel="noopener">
@@ -294,100 +384,148 @@
         <tbody>
           <tr><td>First Home Buyers</td><td class="num">31,783</td><td class="num">$19.3B</td><td class="num">+9.1%</td></tr>
           <tr><td>Investors</td><td class="num">60,445</td><td class="num">$43.0B</td><td class="num">+23.6%</td></tr>
-          <tr><td>Owner-Occupiers (total)</td><td class="num">88,990</td><td class="num">$65.3B</td><td class="num">—</td></tr>
-          <tr><td><strong>Total</strong></td><td class="num"><strong>149,434</strong></td><td class="num">—</td><td class="num">—</td></tr>
+          <tr><td>Owner-Occupiers (total)</td><td class="num">88,990</td><td class="num">$65.3B</td><td class="num">&mdash;</td></tr>
+          <tr><td><strong>Total</strong></td><td class="num"><strong>149,434</strong></td><td class="num">&mdash;</td><td class="num">&mdash;</td></tr>
         </tbody>
       </table>
-      <p>FHB share of total lending: 21.3% | Investor share: 40.4%</p>
 
-      <h4>Research Calibration Points</h4>
-      <p>
-        The model is calibrated to the following published research estimates. Each can be independently verified
-        at the linked sources.
-      </p>
+      <h4>Research Calibration Points <span class="vintage-badge">2022-2025</span></h4>
       <table class="data-table">
         <thead>
-          <tr><th>Source</th><th>Reform Modelled</th><th>Key Finding</th><th>Link</th></tr>
+          <tr><th>Source</th><th>Reform</th><th>Key Finding</th><th>Vintage</th><th>Link</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td>Australian Treasury (2025)</td>
-            <td>Full CGT + NG reform</td>
-            <td>-4.5% max price impact</td>
-            <td><a class="source-link" href="https://www.afr.com/politics/federal/lower-investor-tax-breaks-could-cut-house-prices-by-4-5pc-treasury-20251128-p5nj66" target="_blank" rel="noopener">AFR report</a></td>
+            <td>Australian Treasury</td><td>Full CGT + NG reform</td><td>-4.5% max price impact</td><td>2025</td>
+            <td><a class="source-link" href="https://www.afr.com/politics/federal/lower-investor-tax-breaks-could-cut-house-prices-by-4-5pc-treasury-20251128-p5nj66" target="_blank" rel="noopener">AFR</a></td>
           </tr>
           <tr>
-            <td>Grattan Institute (2025)</td>
-            <td>CGT discount to 25%</td>
-            <td>&lt;1% price reduction; +$6.5B revenue</td>
+            <td>Grattan Institute</td><td>CGT discount to 25%</td><td>&lt;1% price; +$6.5B rev; -10K homes/5yr</td><td>2025</td>
             <td><a class="source-link" href="https://grattan.edu.au/news/reforming-the-capital-gains-tax/" target="_blank" rel="noopener">grattan.edu.au</a></td>
           </tr>
           <tr>
-            <td>e61 Institute (2025)</td>
-            <td>CGT discount to 33%</td>
-            <td>+$2.85B revenue</td>
+            <td>e61 Institute</td><td>CGT discount to 33%</td><td>+$2.85B revenue</td><td>2025</td>
             <td><a class="source-link" href="https://e61.in/what-are-we-discounting-for-thinking-through-cgt-reform-options-utilising-property-data/" target="_blank" rel="noopener">e61.in</a></td>
           </tr>
           <tr>
-            <td>Warlters / NSW Treasury (2022)</td>
-            <td>Halve discount + remove NG</td>
-            <td>+4.7pp owner-occupied share</td>
+            <td>Warlters / NSW Treasury</td><td>Halve discount + remove NG</td><td>+4.7pp owner-occupied share</td><td>2022</td>
             <td><a class="source-link" href="https://onlinelibrary.wiley.com/doi/full/10.1111/1467-8454.12335" target="_blank" rel="noopener">Economic Record</a></td>
           </tr>
           <tr>
-            <td>McKell Institute (2025)</td>
-            <td>Modest CGT adjustment</td>
-            <td>~130,000 additional homes by 2030</td>
+            <td>McKell Institute</td><td>Modest CGT adjustment</td><td>~130,000 additional homes by 2030</td><td>2025</td>
             <td><a class="source-link" href="https://mckellinstitute.org.au/wp-content/uploads/2025/07/McKell-Institute-%E2%80%94-Harnessing-Aspiration-2025-2.pdf" target="_blank" rel="noopener">PDF</a></td>
           </tr>
           <tr>
-            <td>ACOSS (2025)</td>
-            <td>CGT + NG reform</td>
-            <td>$19.7B annual cost; 89% to top 20%</td>
+            <td>ACOSS</td><td>CGT + NG reform</td><td>$19.7B annual cost; 89% to top 20%</td><td>2025</td>
             <td><a class="source-link" href="https://www.acoss.org.au/wp-content/uploads/2025/03/acoss-housing-tax-policy-paper25-1.pdf" target="_blank" rel="noopener">PDF</a></td>
           </tr>
         </tbody>
       </table>
 
-      <h4>Treasury Tax Expenditure Statement 2024-25</h4>
+      <h4>Stamp Duty Rates <span class="vintage-badge">Mar 2026</span></h4>
       <p>
-        The CGT discount for individuals and trusts is estimated to cost $19.7 billion per year in foregone revenue.<br>
-        <a class="source-link" href="https://treasury.gov.au/publication/p2025-607085" target="_blank" rel="noopener">
-          treasury.gov.au &mdash; 2024-25 Tax Expenditures and Insights Statement
+        Simplified stamp duty schedules by state with FHB exemptions.<br>
+        <a class="source-link" href="https://www.money.com.au/home-loans/calculators/stamp-duty-calculator" target="_blank" rel="noopener">money.com.au stamp duty calculator</a>
+        &nbsp;|&nbsp;
+        <a class="source-link" href="https://stampduty.calculatorsaustralia.com.au/stamp-duty-first-home-buyers-australia" target="_blank" rel="noopener">FHB concessions guide</a>
+      </p>
+      <table class="data-table">
+        <thead><tr><th>State</th><th>FHB Exemption</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>NSW</td><td>Exempt up to $800K</td><td>Concession $800K-$1M</td></tr>
+          <tr><td>VIC</td><td>Exempt up to $600K</td><td>Concession $600K-$750K</td></tr>
+          <tr><td>QLD</td><td>Concession under $550K</td><td>$30K FHOG for new homes</td></tr>
+          <tr><td>SA</td><td>None</td><td>No FHB stamp duty concessions</td></tr>
+          <tr><td>WA</td><td>Exempt up to $430K</td><td>Concession to $530K</td></tr>
+          <tr><td>TAS</td><td>50% discount under $600K</td><td>Must be principal residence</td></tr>
+          <tr><td>NT</td><td>Abolished for OO</td><td>Conditions apply</td></tr>
+          <tr><td>ACT</td><td>Exempt up to $607.5K</td><td>New homes only</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Interest Rate Data <span class="vintage-badge">Feb 2026</span></h4>
+      <p>
+        RBA cash rate: 3.85% (Feb 2026). Typical variable mortgage rates: ~6.0-6.5%.<br>
+        <a class="source-link" href="https://www.rba.gov.au/publications/smp/2026/feb/outlook.html" target="_blank" rel="noopener">
+          RBA Statement on Monetary Policy, Feb 2026
         </a>
       </p>
 
-      <h4>ATO Taxation Statistics 2022-23</h4>
+      <h4>Other Sources</h4>
       <p>
-        Capital gains tax data by entity type, covering net capital gains and CGT discount usage.<br>
-        <a class="source-link" href="https://www.ato.gov.au/about-ato/research-and-statistics/in-detail/taxation-statistics/taxation-statistics-2022-23/statistics/capital-gains-tax-statistics" target="_blank" rel="noopener">
-          ato.gov.au &mdash; CGT Statistics 2022-23
-        </a>
-      </p>
-
-      <h4>PBO Cost of Negative Gearing and CGT Discount</h4>
-      <p>
-        Revenue forgone over 10 years and distributional analysis by income decile.<br>
-        <a class="source-link" href="https://www.pbo.gov.au/publications-and-data/publications/costings/cost-of-negative-gearing-and-capital-gains-tax-discount" target="_blank" rel="noopener">
-          pbo.gov.au &mdash; Cost of NG and CGT Discount
-        </a>
+        <a class="source-link" href="https://treasury.gov.au/publication/p2025-607085" target="_blank" rel="noopener">Treasury TEIS 2024-25</a> &mdash; CGT discount cost ($19.7B)<br>
+        <a class="source-link" href="https://www.ato.gov.au/about-ato/research-and-statistics/in-detail/taxation-statistics/taxation-statistics-2022-23/statistics/capital-gains-tax-statistics" target="_blank" rel="noopener">ATO CGT Statistics 2022-23</a><br>
+        <a class="source-link" href="https://www.pbo.gov.au/publications-and-data/publications/costings/cost-of-negative-gearing-and-capital-gains-tax-discount" target="_blank" rel="noopener">PBO NG + CGT Discount Analysis</a><br>
+        <a class="source-link" href="https://www.abs.gov.au/statistics/industry/building-and-construction/building-approvals-australia/jan-2026" target="_blank" rel="noopener">ABS Building Approvals, Jan 2026</a><br>
+        <a class="source-link" href="https://theconversation.com/how-cutting-the-capital-gains-tax-discount-could-help-rebalance-the-housing-market-275213" target="_blank" rel="noopener">CGT benefit distribution analysis (The Conversation / ACOSS)</a>
       </p>
 
       <h4>CGT Discount Benefit Distribution</h4>
       <table class="data-table">
-        <thead>
-          <tr><th>Group</th><th class="num">Share of CGT Discount Benefits</th></tr>
-        </thead>
+        <thead><tr><th>Group</th><th class="num">Share of Benefits</th></tr></thead>
         <tbody>
           <tr><td>Top 20% of income earners</td><td class="num">89%</td></tr>
           <tr><td>Australians over 60</td><td class="num">52%</td></tr>
           <tr><td>Australians aged 18-34</td><td class="num">4%</td></tr>
         </tbody>
       </table>
-      <p>
-        Source: The Conversation / ACOSS analysis, 2025.
-        <a class="source-link" href="https://theconversation.com/how-cutting-the-capital-gains-tax-discount-could-help-rebalance-the-housing-market-275213" target="_blank" rel="noopener">Read article</a>
-      </p>
+    </div>
+  </section>
+
+  <!-- ====== Improvements Log ====== -->
+  <section class="accordion">
+    <button class="accordion-toggle" data-target="improvementsContent" aria-expanded="false">
+      <span>What Changed in v2 (Limitations Addressed)</span>
+      <span class="accordion-icon">+</span>
+    </button>
+    <div class="accordion-content" id="improvementsContent">
+      <table class="data-table">
+        <thead>
+          <tr><th>v1 Limitation</th><th>v2 Improvement</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Single point estimates only</td>
+            <td>Added low/central/high confidence bands showing range of institutional estimates (Grattan conservative to Treasury upper bound)</td>
+            <td>Addressed</td>
+          </tr>
+          <tr>
+            <td>CGT + NG additive approximation</td>
+            <td>Replaced with multiplicative interaction model where NG effect scales with CGT discount level</td>
+            <td>Addressed</td>
+          </tr>
+          <tr>
+            <td>No supply-side responses</td>
+            <td>Added construction impact and rent impact estimates calibrated to Grattan data (-2,000 homes/yr, &lt;$1/wk rent at 25% discount)</td>
+            <td>Partially addressed</td>
+          </tr>
+          <tr>
+            <td>No stamp duty</td>
+            <td>Added state-specific stamp duty calculations with FHB exemptions; shows total upfront cost</td>
+            <td>Addressed</td>
+          </tr>
+          <tr>
+            <td>No interest rate sensitivity</td>
+            <td>Added interest rate slider (3.5%-8.5%) showing mortgage payments and income needed at different rates</td>
+            <td>Addressed</td>
+          </tr>
+          <tr>
+            <td>Static model only</td>
+            <td>Added 5-year phase-in timeline chart based on Grattan's recommended gradual implementation</td>
+            <td>Partially addressed</td>
+          </tr>
+          <tr>
+            <td>Data from different years unclear</td>
+            <td>Added vintage badges throughout indicating the reference period for each data source</td>
+            <td>Addressed</td>
+          </tr>
+          <tr>
+            <td>City investor shares as estimates</td>
+            <td>Marked with confidence level; exact state breakdowns require ABS microdata not publicly available</td>
+            <td>Documented</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
@@ -396,7 +534,7 @@
 <footer>
   <div class="container">
     <p>
-      CGT Housing Impact Model &mdash; Built with publicly available Australian government data.
+      CGT Housing Impact Model v2 &mdash; Built with publicly available Australian government data.
       All data sources are linked above for independent verification.
     </p>
     <p style="margin-top: 0.5rem;">
