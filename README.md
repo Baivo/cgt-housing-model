@@ -4,7 +4,7 @@ Interactive model showing how changes to Australia's 50% capital gains tax disco
 
 ## Live Demo
 
-View the interactive model at: [GitHub Pages link]
+View the interactive model at: [https://baivo.github.io/cgt-housing-model/](https://baivo.github.io/cgt-housing-model/)
 
 ## What This Models
 
