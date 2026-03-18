@@ -371,9 +371,10 @@
 
       <h4>Migration Price Effect Model</h4>
       <p>
-        The model dynamically adjusts baseline dwelling prices based on changes in net overseas migration (NOM).
-        When NOM differs from the observed baseline of 306,000 (ABS 2024-25), prices are adjusted using a
-        population-to-price elasticity derived from peer-reviewed research.
+        The model adjusts baseline dwelling prices based on sustained changes to net overseas migration (NOM).
+        Migration is a flow (people/year), but housing prices respond to the <strong>cumulative population stock</strong>
+        that builds up over time. A sustained change in NOM over a 5-year policy horizon produces a meaningful
+        population deviation that shifts prices.
       </p>
       <p>
         <strong>Elasticity calibration:</strong> Tran &amp; Faff (2023) used two-stage least squares (2SLS) with
@@ -381,21 +382,25 @@
         leads to a 1.16%&ndash;1.59% increase in home prices.
         <a class="source-link" href="https://www.nature.com/articles/s42949-023-00136-7">Nature (2023)</a>.
         OECD cross-country analysis (Gevorgyan) found ~1.4pp price growth per 1pp population growth.
-        The model uses a <strong>conservative central elasticity of 1.0</strong> (below the 2SLS range), meaning
-        a 1% change in population translates to a 1% change in dwelling prices.
+        The model uses a <strong>conservative central elasticity of 1.0</strong> (below the 2SLS range).
       </p>
       <p>
         <strong>Calculation:</strong><br>
         <code>NOM deviation = user NOM &minus; 306,000</code><br>
-        <code>Population change % = NOM deviation / 27,000,000 &times; 100</code><br>
-        <code>Price adjustment % = Population change % &times; elasticity (1.0)</code><br>
+        <code>Cumulative pop. change = NOM deviation &times; 5 years</code><br>
+        <code>Population change % = cumulative change / 27,000,000 &times; 100</code><br>
+        <code>Price adjustment % = population change % &times; elasticity (1.0)</code><br>
         <code>Adjusted baseline = observed price &times; (1 + price adjustment %)</code>
       </p>
       <p>
+        <strong>Example:</strong> Reducing NOM from 306K to 150K for 5 years means 780,000 fewer people cumulatively,
+        a 2.9% population reduction, producing a ~2.9% price reduction (~$31K nationally). Conversely, returning to
+        peak NOM of 500K would add 970,000 extra people over 5 years, lifting prices ~3.6%.
+      </p>
+      <p>
         All downstream calculations (CGT reform price impact, deposit, stamp duty, mortgage) then operate on
-        the migration-adjusted baseline rather than the observed price. This allows users to model scenarios like
-        &ldquo;what if NOM was halved?&rdquo; and see both the direct migration price effect and the CGT reform
-        effect on top of it.
+        the migration-adjusted baseline. This allows users to model combined scenarios like
+        &ldquo;what if NOM was halved AND the CGT discount reduced?&rdquo; and see both effects together.
       </p>
 
       <h4>Migration and Supply Context</h4>

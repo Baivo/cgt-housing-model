@@ -149,16 +149,20 @@ const Model = (() => {
     const nom = ov.nom != null ? ov.nom : DATA.migration.netOverseasMigration.current;
     const householdSize = ov.householdSize != null ? ov.householdSize : DATA.migration.housingDemand.averageHouseholdSize;
 
-    // --- Migration price pressure ---
-    // Adjusts baseline price based on NOM deviation from current observed level.
+    // --- Migration price pressure (cumulative over policy horizon) ---
+    // NOM is a flow; housing prices respond to cumulative population stock changes.
+    // A sustained NOM change over HORIZON_YEARS produces a cumulative population
+    // deviation that shifts prices via the population-price elasticity.
     // Elasticity: 1% population change → ~1% price change (conservative central;
     // 2SLS estimates 1.16-1.59%, Tran & Faff 2023, Nature).
+    const HORIZON_YEARS = 5;
     const mig = DATA.migration;
     const baselineNom = mig.netOverseasMigration.current;
     const baselinePop = mig.priceElasticity.baselinePopulation;
     const migElasticity = mig.priceElasticity.central;
     const nomDeviation = nom - baselineNom;
-    const popChangePct = (nomDeviation / baselinePop) * 100;
+    const cumulativePopChange = nomDeviation * HORIZON_YEARS;
+    const popChangePct = (cumulativePopChange / baselinePop) * 100;
     const migPriceAdjustPct = popChangePct * migElasticity;
     const basePrice = Math.round(observedPrice * (1 + migPriceAdjustPct / 100));
 
