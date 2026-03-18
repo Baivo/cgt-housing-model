@@ -20,7 +20,6 @@
       Explore how varying Australia's 50% CGT discount and negative gearing policy affects dwelling prices,
       deposit requirements, stamp duty, mortgage costs, and first home buyer market share. Model calibrated to
       published estimates from Australian Treasury, Grattan Institute, e61 Institute, and academic research.
-      Outputs include confidence bands showing the range of institutional estimates.
     </p>
   </div>
 </header>
@@ -115,7 +114,7 @@
 
     <div class="controls-section">
       <div class="controls-section-label">Projection Assumptions</div>
-      <div class="controls-grid">
+      <div class="controls-grid-2">
         <div class="control-group">
           <label for="horizonSlider">Projection Horizon</label>
           <div class="slider-container">
@@ -131,12 +130,6 @@
             <span class="slider-value slider-value-sm" id="incomeGrowthSliderValue">3.0%</span>
           </div>
         </div>
-
-        <div class="control-group">
-          <label>Derived Price Growth</label>
-          <div id="metricDerivedGrowth" style="font-size: 1.3rem; font-weight: 700; color: var(--accent); line-height: 1.3;">—</div>
-          <div class="metric-sub" id="metricDerivedGrowthSub">Income + supply gap premium</div>
-        </div>
       </div>
     </div>
 
@@ -151,138 +144,118 @@
   <!-- ====== Summary ====== -->
   <div class="summary-box" id="scenarioSummary"></div>
 
-  <!-- ====== Row 1: Price + Affordability ====== -->
-  <div class="section-heading">Current Snapshot</div>
+  <!-- ====== Section A: Your Situation Today ====== -->
+  <div class="section-heading">Your Situation Today</div>
   <section class="metrics-grid">
     <div class="metric-card">
-      <div class="metric-label">Price Change <span class="vintage-badge">Central</span></div>
-      <div class="metric-value" id="metricPriceChange">0%</div>
-      <div class="metric-sub" id="metricPriceRange"></div>
-      <div class="metric-sub"><span id="metricNewPrice"></span></div>
-      <div class="metric-sub"><span id="metricBasePrice"></span></div>
+      <div class="metric-label">Current Dwelling Price</div>
+      <div class="metric-value" id="metricCurrentPrice">$0</div>
+      <div class="metric-sub" id="metricCurrentPriceSub">Australia (National)</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Deposit Saving (20%)</div>
-      <div class="metric-value" id="metricDepositSaving">$0</div>
-      <div class="metric-sub"><span id="metricYearsSaved" class="metric-value"></span> saving time</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">FHB Market Share Change</div>
-      <div class="metric-value" id="metricFhbShare">+0pp</div>
-      <div class="metric-sub">Currently <span id="cityLabel">Australia</span></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Budget Revenue Change</div>
-      <div class="metric-value" id="metricRevenue">$0B</div>
-      <div class="metric-sub">Effective CGT: <span id="metricEffectiveCgt"></span></div>
-      <div class="metric-sub"><span id="metricEffectiveCgtBase"></span></div>
-    </div>
-  </section>
-
-  <!-- ====== Row 2: Stamp duty + Mortgage + Supply ====== -->
-  <section class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-label">FHB Stamp Duty <span class="vintage-badge">2026</span></div>
-      <div class="metric-value" id="metricStampDuty">$0</div>
-      <div class="metric-sub" id="metricStampDutyBase"></div>
-      <div class="metric-sub" id="metricStampDutyNote"></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Total Upfront (Deposit + Duty)</div>
+      <div class="metric-label">Total Upfront (Deposit + Stamp Duty)</div>
       <div class="metric-value" id="metricTotalUpfront">$0</div>
-      <div class="metric-sub" id="metricTotalUpfrontSaving"></div>
+      <div class="metric-sub" id="metricTotalUpfrontBreakdown"></div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Monthly Mortgage</div>
       <div class="metric-value" id="metricMonthly">$0/mo</div>
-      <div class="metric-sub" id="metricMonthlyBase"></div>
-      <div class="metric-sub">Income needed: <span id="metricIncomeNeeded"></span></div>
+      <div class="metric-sub">Income needed: <span id="metricIncomeNeeded">$0</span></div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Investor Return Reduction</div>
-      <div class="metric-value" id="metricReturnReduction">0%</div>
-      <div class="metric-sub">After-tax return on 7-year hold</div>
+      <div class="metric-label">Years to Save Deposit</div>
+      <div class="metric-value" id="metricYearsToSave">0</div>
+      <div class="metric-sub" id="metricYearsToSaveSub"></div>
     </div>
   </section>
 
-  <!-- ====== Row 3: Supply-side ====== -->
-  <div class="section-heading">Supply &amp; Migration</div>
-  <section class="metrics-grid">
+  <!-- ====== Section B: What Drives Prices ====== -->
+  <div class="section-heading">What Drives Prices</div>
+  <section class="metrics-grid metrics-grid-3">
     <div class="metric-card">
-      <div class="metric-label">Construction Impact <span class="vintage-badge">Grattan est.</span></div>
-      <div class="metric-value" id="metricConstruction">0</div>
-      <div class="metric-sub">Homes per year (estimated)</div>
+      <div class="metric-label">Derived Price Growth</div>
+      <div class="metric-value" id="metricDerivedGrowth" style="color: var(--accent);">—</div>
+      <div class="metric-sub" id="metricDerivedGrowthSub">Income + supply gap premium</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Rent Impact <span class="vintage-badge">Grattan est.</span></div>
-      <div class="metric-value" id="metricRent">$0</div>
-      <div class="metric-sub">Estimated change in median weekly rent</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Migration Price Effect</div>
-      <div class="metric-value" id="metricMigPrice">0%</div>
-      <div class="metric-sub" id="metricMigPriceSub">Baseline price adjustment from NOM change</div>
+      <div class="metric-label">Annual Supply Gap</div>
+      <div class="metric-value" id="metricSupplyGap">0/yr</div>
+      <div class="metric-sub" id="metricSupplyGapSub">Demand minus construction</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">Migration Dwelling Demand</div>
       <div class="metric-value" id="metricMigDemand">0/yr</div>
       <div class="metric-sub" id="metricMigDemandSub">NOM 306K &divide; 2.5 ppd</div>
     </div>
+  </section>
+
+  <!-- ====== Section C: Reform Impact ====== -->
+  <div class="section-heading">Reform Impact</div>
+  <div id="reformNoChange" class="reform-placeholder" style="display: none;">
+    Adjust the CGT discount or disable negative gearing to see reform effects.
+  </div>
+  <section class="metrics-grid" id="reformMetrics">
     <div class="metric-card">
-      <div class="metric-label">Existing Supply Gap</div>
-      <div class="metric-value" id="metricSupplyGap">0/yr</div>
-      <div class="metric-sub" id="metricSupplyGapSub">Demand minus construction (177K/yr)</div>
+      <div class="metric-label">Price Change <span class="vintage-badge">Central</span></div>
+      <div class="metric-value" id="metricPriceChange">0%</div>
+      <div class="metric-sub" id="metricPriceRange"></div>
+      <div class="metric-sub"><span id="metricNewPrice"></span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Deposit Saving</div>
+      <div class="metric-value" id="metricDepositSaving">$0</div>
+      <div class="metric-sub"><span id="metricYearsSaved"></span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Budget Revenue Change</div>
+      <div class="metric-value" id="metricRevenue">$0B</div>
+      <div class="metric-sub" id="metricRevenueSub">Annual additional revenue</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">FHB Market Share Change</div>
+      <div class="metric-value" id="metricFhbShare">+0pp</div>
+      <div class="metric-sub" id="metricFhbShareSub"></div>
     </div>
   </section>
 
-  <!-- ====== Row 4: CGT reform in migration context ====== -->
-  <section class="metrics-grid">
-    <div class="metric-card" style="grid-column: span 2;">
-      <div class="metric-label">CGT Reform Supply Impact as % of Existing Gap</div>
-      <div class="metric-value" id="metricCgtVsGap">0%</div>
-      <div class="metric-sub" id="metricCgtVsGapNote">No CGT reform selected</div>
-    </div>
-  </section>
-
-  <!-- ====== Projection Summary ====== -->
-  <div class="section-heading">Projection</div>
+  <!-- ====== Section D: Your Housing Future ====== -->
+  <div class="section-heading">Your Housing Future</div>
   <div class="projection-hero">
-  <section class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-label">Price in <span id="projEndYearLabel">2036</span></div>
-      <div class="metric-value" id="metricProjPriceNoReform">$0</div>
-      <div class="metric-sub">Without reform</div>
-      <div class="metric-value positive metric-value-alt" id="metricProjPriceReform">$0</div>
-      <div class="metric-sub">With reform</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Price Saving by <span id="projEndYearLabel2">2036</span></div>
-      <div class="metric-value positive" id="metricProjPriceDiff">$0</div>
-      <div class="metric-sub" id="metricProjPriceDiffPct">0% lower</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Year You Can Buy</div>
-      <div class="metric-value" id="metricProjBuyNoReform">&mdash;</div>
-      <div class="metric-sub">Without reform</div>
-      <div class="metric-value positive metric-value-alt" id="metricProjBuyReform">&mdash;</div>
-      <div class="metric-sub" id="metricProjBuySaved">With reform</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Price-to-Income Ratio</div>
-      <div class="metric-value" id="metricProjPtiNoReform">0</div>
-      <div class="metric-sub">Without reform</div>
-      <div class="metric-value positive metric-value-alt" id="metricProjPtiReform">0</div>
-      <div class="metric-sub">With reform</div>
-    </div>
-  </section>
-
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Price in <span id="projEndYearLabel">2036</span></div>
+        <div class="metric-value" id="metricProjPriceNoReform">$0</div>
+        <div class="metric-sub">Without reform</div>
+        <div class="metric-value metric-value-alt" id="metricProjPriceReform">$0</div>
+        <div class="metric-sub">With reform</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Price Saving by <span id="projEndYearLabel2">2036</span></div>
+        <div class="metric-value" id="metricProjPriceDiff">$0</div>
+        <div class="metric-sub" id="metricProjPriceDiffPct">0% lower</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Year You Can Buy</div>
+        <div class="metric-value" id="metricProjBuyNoReform">&mdash;</div>
+        <div class="metric-sub">Without reform</div>
+        <div class="metric-value metric-value-alt" id="metricProjBuyReform">&mdash;</div>
+        <div class="metric-sub" id="metricProjBuySaved">With reform</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Price-to-Income Ratio</div>
+        <div class="metric-value" id="metricProjPtiNoReform">0</div>
+        <div class="metric-sub">Without reform</div>
+        <div class="metric-value metric-value-alt" id="metricProjPtiReform">0</div>
+        <div class="metric-sub">With reform</div>
+      </div>
+    </section>
   </div>
 
-  <!-- ====== Projection Charts ====== -->
+  <!-- Projection Charts -->
   <section class="charts-grid">
     <div class="chart-card" style="grid-column: span 2;">
-      <h3>Your Housing Future <span class="vintage-badge">Projected</span></h3>
-      <p class="chart-desc">Dwelling price trajectories under current policy vs your selected reform. Prices evolve with baseline growth, migration pressure, and supply gap dynamics. Reform effects phase in over 5 years.</p>
+      <h3>Price Trajectories <span class="vintage-badge">Projected</span></h3>
+      <p class="chart-desc">Dwelling price paths under current policy vs your selected reform. Prices are driven by income growth and the supply-demand gap. Reform effects phase in over 5 years.</p>
       <div class="chart-wrap" style="height: 360px;">
         <canvas id="trajectoryChart"></canvas>
       </div>
@@ -298,14 +271,14 @@
 
     <div class="chart-card">
       <h3>Housing Stock Balance</h3>
-      <p class="chart-desc">Cumulative dwelling demand vs cumulative construction, showing how the supply gap compounds over time under each scenario.</p>
+      <p class="chart-desc">Cumulative dwelling demand vs construction, showing how the supply gap compounds over time under each scenario.</p>
       <div class="chart-wrap">
         <canvas id="stockChart"></canvas>
       </div>
     </div>
   </section>
 
-  <!-- ====== Analytical Charts ====== -->
+  <!-- Analytical Charts -->
   <div class="section-heading">Detailed Analysis</div>
   <section class="charts-grid">
     <div class="chart-card">
@@ -334,15 +307,15 @@
 
     <div class="chart-card">
       <h3>Budget Revenue Impact</h3>
-      <p class="chart-desc">Additional annual government revenue from reducing the CGT discount, with and without negative gearing reform. Calibrated to Grattan and e61 estimates.</p>
+      <p class="chart-desc">Additional annual government revenue from reducing the CGT discount, with and without negative gearing reform.</p>
       <div class="chart-wrap">
         <canvas id="revenueChart"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
+    <div class="chart-card" style="grid-column: span 2;">
       <h3>Supply-Side Impact <span class="vintage-badge">Grattan est.</span></h3>
-      <p class="chart-desc">Estimated effect on new housing construction and median rents. At 25% discount, Grattan estimates ~2,000 fewer homes/year and &lt;$1/week rent increase. Values scaled linearly from this anchor.</p>
+      <p class="chart-desc">Estimated effect on new housing construction and median rents. At 25% discount, Grattan estimates ~2,000 fewer homes/year and &lt;$1/week rent increase.</p>
       <div class="chart-wrap">
         <canvas id="supplyChart"></canvas>
       </div>
@@ -365,6 +338,31 @@
         <strong>confidence bands</strong> showing the range of estimates.
       </p>
 
+      <h4>Unified Supply-Gap Framework</h4>
+      <p>
+        Both the static snapshot and time-series projection use the same price model. Price growth is derived
+        from two fundamentals:
+      </p>
+      <p>
+        <code>price_growth = income_growth + (annual_supply_gap / dwelling_stock) &times; 8.5</code>
+      </p>
+      <ul>
+        <li><strong>Income growth</strong> (adjustable, default 3.0% p.a.) is the equilibrium anchor &mdash; in a market
+          where supply meets demand, house prices track incomes over the long run.</li>
+        <li><strong>Supply gap premium</strong> captures the structural undersupply. The annual gap between
+          dwelling demand and construction, expressed as a share of total housing stock, is multiplied by a
+          calibration factor of 8.5 to produce the excess price growth above income growth.</li>
+      </ul>
+      <p>
+        <strong>Calibration:</strong> At current conditions (demand ~223K, construction ~177K, gap = 46K, stock = 11.45M),
+        the formula yields: 3.0% + (46K &divide; 11.45M) &times; 8.5 = 3.0% + 3.4% = <strong>6.4% p.a.</strong> &mdash;
+        consistent with long-run Australian dwelling price growth of ~6&ndash;7% p.a.
+      </p>
+      <p>
+        Migration, household size, and construction capacity all feed into price growth
+        automatically. Increasing NOM widens the gap and accelerates prices; reducing it narrows or reverses the gap.
+      </p>
+
       <h4>Confidence Bands</h4>
       <p>
         All price impact estimates are presented with three scenarios reflecting the range of published research:
@@ -379,10 +377,6 @@
           <tr><td>Upper bound</td><td>Treasury-aligned: 4.5% combined max</td><td>1.4&times; central</td></tr>
         </tbody>
       </table>
-      <p>
-        This approach transparently shows users the uncertainty in the estimates rather than presenting
-        a single point estimate. The true impact likely falls within this range.
-      </p>
 
       <h4>CGT Discount Mechanism</h4>
       <p>
@@ -405,8 +399,7 @@
       <p>
         State-specific stamp duty is calculated using simplified graduated rate
         schedules from each state's revenue office. First home buyer exemptions and concessions are applied where
-        applicable. This shows the <strong>total upfront cost</strong> (deposit + stamp duty) rather than
-        deposit alone, giving a more realistic picture of barriers to entry.
+        applicable.
       </p>
 
       <h4>Interest Rate Sensitivity</h4>
@@ -421,43 +414,15 @@
       <p>
         The model estimates the effect on new housing construction and rents,
         calibrated to the Grattan Institute's estimate of approximately 10,000 fewer homes over 5 years (2,000/year)
-        at a 25% discount level, with a rent impact of less than $1 per week. These are scaled linearly for other
-        discount levels. The Grattan Institute notes this supply impact could be more than offset if even a small
-        portion of the reform revenue were directed to social housing or planning reform.
+        at a 25% discount level, with a rent impact of less than $1 per week.
       </p>
 
-      <h4>Time-Series Projection Model</h4>
+      <h4>Time-Series Projection</h4>
       <p>
         The model projects dwelling prices, affordability, and housing supply forward year-by-year over a
         user-configurable horizon (5&ndash;20 years). It runs <strong>two parallel simulations</strong> &mdash;
         one under current policy and one under the selected reform &mdash; to show how differences compound over time.
       </p>
-
-      <h4>Derived Price Growth (Not an Arbitrary Input)</h4>
-      <p>
-        Price growth is <strong>not set manually</strong>. Instead, it is derived each year from two fundamentals:
-      </p>
-      <p>
-        <code>price_growth = income_growth + (annual_supply_gap / dwelling_stock) &times; 8.5</code>
-      </p>
-      <ul>
-        <li><strong>Income growth</strong> (adjustable, default 3.0% p.a.) is the equilibrium anchor &mdash; in a market
-          where supply meets demand, house prices track incomes over the long run.</li>
-        <li><strong>Supply gap premium</strong> captures the structural undersupply. The annual gap between
-          dwelling demand and construction, expressed as a share of total housing stock, is multiplied by a
-          calibration factor of 8.5 to produce the excess price growth above income growth.</li>
-      </ul>
-      <p>
-        <strong>Calibration:</strong> At current conditions (demand ~223K, construction ~177K, gap = 46K, stock = 11.45M),
-        the formula yields: 3.0% + (46K &divide; 11.45M) &times; 8.5 = 3.0% + 3.4% = <strong>6.4% p.a.</strong> &mdash;
-        consistent with long-run Australian dwelling price growth of ~6&ndash;7% p.a.
-      </p>
-      <p>
-        This approach means migration, household size, and construction capacity all feed into price growth
-        automatically. Increasing NOM widens the gap and accelerates prices; reducing it narrows or reverses the gap.
-        No arbitrary &ldquo;price growth assumption&rdquo; is needed.
-      </p>
-
       <p>Each year in the simulation:</p>
       <ol>
         <li><strong>Population</strong> grows by the user-selected Net Overseas Migration (NOM) per year.</li>
@@ -465,23 +430,11 @@
         <li><strong>Construction</strong> starts from the baseline (~177,000/yr) and incorporates the CGT reform's
           construction impact as it phases in over 5 years (Grattan approach).</li>
         <li><strong>Dwelling stock</strong> grows by annual construction.</li>
-        <li><strong>Price growth</strong> each year combines:
-          <ul>
-            <li><em>Income growth</em> (adjustable, default 3.0% p.a.)</li>
-            <li><em>Supply gap premium</em>: (demand &minus; construction) / stock &times; 8.5</li>
-            <li><em>CGT reform effect</em>: the calibrated price impact phases in linearly over 5 years</li>
-          </ul>
-        </li>
+        <li><strong>Price growth</strong> each year combines income growth, the supply gap premium, and the phased-in
+          CGT reform effect &mdash; using the same formula as the static model.</li>
         <li><strong>Savings</strong> accumulate each year; the model identifies when cumulative savings reach
           the deposit required at that year's price.</li>
-        <li><strong>Income</strong> grows at the user-selected rate (default 3.0% p.a., based on ABS WPI trend),
-          enabling price-to-income ratio tracking.</li>
       </ol>
-      <p>
-        This approach captures key dynamics that static models miss: the compounding effect of sustained migration
-        on prices, the growing supply gap, and how reform benefits accumulate over time. The &ldquo;deposit race&rdquo;
-        chart makes affordability viscerally clear by showing whether savings can outpace rising house prices.
-      </p>
 
       <h4>Price Impact Calibration</h4>
       <table class="data-table">
@@ -508,71 +461,18 @@
         <li><strong>Net overseas migration: 306,000 (adjustable 0-500K)</strong></li>
         <li><strong>Persons per dwelling: 2.5 (adjustable 2.0-3.0)</strong></li>
         <li><strong>Projection horizon: 10 years (adjustable 5-20)</strong></li>
-        <li><strong>Price growth: derived</strong> from income growth + supply gap premium (not user-set)</li>
+        <li><strong>Price growth: derived</strong> from income growth + supply gap premium</li>
         <li><strong>Income growth: 3.0% p.a. (adjustable 0-6%)</strong> &mdash; ABS Wage Price Index long-run trend</li>
         <li>Supply gap premium multiplier: 8.5 (calibrated to historical AU price growth ~6.5% vs income growth ~3%)</li>
       </ul>
-
-      <h4>Migration Price Effect Model</h4>
-      <p>
-        The model adjusts baseline dwelling prices based on sustained changes to net overseas migration (NOM)
-        through <strong>two reinforcing channels</strong>, both calculated over a 5-year policy horizon:
-      </p>
-
-      <p><strong>Channel 1 &mdash; Demand pressure:</strong>
-        More people competing for housing directly bids up prices.
-        Calibrated to Tran &amp; Faff (2023), who used 2SLS with a climate-visa instrumental variable on Australian
-        panel data and found a 1% increase in city population leads to a 1.16%&ndash;1.59% increase in home prices
-        (<a class="source-link" href="https://www.nature.com/articles/s42949-023-00136-7">Nature, 2023</a>).
-        The model uses a conservative central elasticity of 1.0.
-      </p>
-      <p>
-        <code>Cumulative pop. change = (NOM &minus; 306K) &times; 5 years</code><br>
-        <code>Demand price effect = (cumulative change / 27.4M) &times; elasticity</code>
-      </p>
-
-      <p><strong>Channel 2 &mdash; Supply gap scarcity:</strong>
-        When dwelling demand persistently exceeds construction capacity, the cumulative unmet demand as a
-        fraction of total housing stock creates additional scarcity pressure. A coefficient of 0.5 is used
-        (conservative, to account for partial overlap with Channel 1 which already implicitly reflects
-        average supply conditions in its estimated elasticity).
-      </p>
-      <p>
-        <code>Gap change = (new annual gap &minus; baseline 46K gap) &times; 5 years</code><br>
-        <code>Gap price effect = (cumulative gap change / 11.45M dwellings) &times; 0.5</code>
-      </p>
-
-      <p><strong>Combined effect:</strong> The two channels are additive.
-        For example, reducing NOM from 306K to 0 over 5 years produces a demand effect of &minus;5.6%
-        plus a supply gap effect of &minus;2.7% (the gap turns into a surplus), for a total of &minus;8.3%
-        (&sim;$89K nationally). Returning to peak NOM of 500K produces +3.5% demand + +1.7% scarcity = +5.2%.
-      </p>
-      <p>
-        All downstream calculations (CGT reform price impact, deposit, stamp duty, mortgage) then operate on
-        the migration-adjusted baseline. This allows users to model combined scenarios like
-        &ldquo;what if NOM was halved AND the CGT discount reduced?&rdquo; and see both effects together.
-      </p>
-
-      <h4>Migration and Supply Context</h4>
-      <p>
-        The model dynamically calculates migration-driven housing demand and the supply gap based on user-adjustable
-        NOM and persons-per-dwelling parameters. At baseline (NOM 306K, 2.5 ppd), migration drives demand for ~122,400
-        dwellings/year. Total annual dwelling demand is ~223,000 (NHSAC 2025), while construction delivers ~177,000/year,
-        creating a ~46,000/year supply gap. These figures update in real time as users adjust migration levels.
-      </p>
-      <p>
-        State-level migration-induced shortfalls (IPA, 2022-2024): WA 52,783; QLD 48,737; NSW 44,533; VIC 32,244;
-        SA 6,732. Tasmania had a surplus of 6,541. The National Housing Accord targets 1.2 million homes by 2029,
-        but only 938,000 are expected to be delivered (shortfall of 262,000).
-      </p>
 
       <h4>Remaining Limitations</h4>
       <ul>
         <li>Uses piecewise linear interpolation calibrated to published estimates, not a full general equilibrium model</li>
         <li>Projection assumes constant annual NOM and construction capacity; real-world values fluctuate with economic cycles</li>
         <li>Supply gap premium multiplier (8.5) is calibrated to historical averages; actual sensitivity may vary by market cycle</li>
-        <li>Supply-side estimates are scaled linearly from a single calibration point (Grattan, 25% discount); actual supply responses may be non-linear</li>
-        <li>Stamp duty schedules are simplified approximations; actual duty may vary based on property type, eligibility, and concession changes</li>
+        <li>Supply-side estimates are scaled linearly from a single calibration point (Grattan, 25% discount)</li>
+        <li>Stamp duty schedules are simplified approximations; actual duty may vary</li>
         <li>Does not model state-level land tax or planning regulation differences beyond stamp duty</li>
         <li>Does not model foreign investment restrictions or their interaction with CGT reform</li>
         <li>City-level investor shares are estimates derived from ABS lending patterns (confidence: moderate)</li>
@@ -706,11 +606,6 @@
           <tr><td>Baseline population</td><td class="num">27,400,000</td><td><a class="source-link" href="https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population" target="_blank" rel="noopener">ABS Population (Dec 2024)</a></td></tr>
         </tbody>
       </table>
-      <p>
-        <strong>State-level migration-induced shortfalls (2022-2024):</strong>
-        WA: 52,783 | QLD: 48,737 | NSW: 44,533 | VIC: 32,244 | SA: 6,732 | TAS: -6,541 (surplus)<br>
-        <a class="source-link" href="https://ipa.org.au/publications-ipa/research-note/analysis-of-migration-induced-housing-shortfall-since-2022" target="_blank" rel="noopener">IPA: Analysis of migration-induced housing shortfall</a>
-      </p>
 
       <h4>Interest Rate Data <span class="vintage-badge">Mar 2026</span></h4>
       <p>
@@ -741,7 +636,6 @@
     </div>
   </section>
 
-
 </main>
 
 <footer>
@@ -763,10 +657,10 @@
   </div>
 </footer>
 
-<script src="js/data.js?v=7"></script>
-<script src="js/model.js?v=7"></script>
-<script src="js/charts.js?v=7"></script>
-<script src="js/ui.js?v=7"></script>
+<script src="js/data.js?v=8"></script>
+<script src="js/model.js?v=8"></script>
+<script src="js/charts.js?v=8"></script>
+<script src="js/ui.js?v=8"></script>
 
 </body>
 </html>

@@ -24,45 +24,138 @@ const UI = (() => {
     };
   }
 
-  function formatCurrency(val) {
+  const el = id => document.getElementById(id);
+
+  function fmt(val) {
     return new Intl.NumberFormat('en-AU', {
       style: 'currency', currency: 'AUD', maximumFractionDigits: 0
     }).format(val);
   }
 
+  /* ====== Section A: Your Situation Today ====== */
+  function updateSituationCards(r) {
+    el('metricCurrentPrice').textContent = fmt(r.basePrice);
+    el('metricCurrentPriceSub').textContent = r.cityLabel;
+
+    el('metricTotalUpfront').textContent = fmt(r.totalUpfrontCurrent);
+    el('metricTotalUpfrontBreakdown').textContent =
+      `Deposit ${fmt(r.currentDeposit)} + stamp duty ${fmt(r.stampDutyBase.fhb)}`;
+
+    el('metricMonthly').textContent = fmt(r.baseMonthlyPayment) + '/mo';
+    el('metricIncomeNeeded').textContent = fmt(r.incomeNeeded);
+
+    el('metricYearsToSave').textContent = r.currentYearsToSave.toFixed(1) + ' yrs';
+    el('metricYearsToSaveSub').textContent =
+      `At ${fmt(r.annualSavingsUsed)}/yr for ${Math.round(r.depositPctUsed * 100)}% deposit`;
+  }
+
+  /* ====== Section B: What Drives Prices ====== */
+  function updateDriverCards(r) {
+    el('metricDerivedGrowth').textContent = r.derivedGrowthPct.toFixed(1) + '% p.a.';
+    el('metricDerivedGrowthSub').textContent =
+      `Income ${r.incomeGrowthPct.toFixed(0)}% + supply gap ${r.supplyPremiumPct.toFixed(1)}%`;
+
+    const gapEl = el('metricSupplyGap');
+    gapEl.textContent = r.existingGap.toLocaleString() + '/yr';
+    if (r.existingGap > 0) {
+      gapEl.classList.remove('positive');
+      gapEl.classList.add('negative');
+    } else {
+      gapEl.classList.remove('negative');
+      gapEl.classList.add('positive');
+    }
+    el('metricSupplyGapSub').textContent =
+      `Demand ${r.totalDwellingDemand.toLocaleString()}/yr \u2212 construction ${r.currentConstruction.toLocaleString()}/yr`;
+
+    el('metricMigDemand').textContent = r.migrationDwellingDemand.toLocaleString() + '/yr';
+    el('metricMigDemandSub').textContent =
+      `NOM ${(r.nom / 1000).toFixed(0)}K \u00F7 ${r.householdSize.toFixed(1)} ppd`;
+  }
+
+  /* ====== Section C: Reform Impact ====== */
+  function updateReformCards(r) {
+    const isReform = r.cgtDiscount !== 50 || !r.ngEnabled;
+    const reformSection = el('reformMetrics');
+    const noChangeMsg = el('reformNoChange');
+
+    if (!isReform) {
+      reformSection.style.display = 'none';
+      noChangeMsg.style.display = 'block';
+      return;
+    }
+    reformSection.style.display = '';
+    noChangeMsg.style.display = 'none';
+
+    const priceEl = el('metricPriceChange');
+    priceEl.textContent = (r.priceChangePct >= 0 ? '+' : '') + r.priceChangePct.toFixed(2) + '%';
+    priceEl.classList.remove('positive', 'negative');
+    if (r.priceChangePct < 0) priceEl.classList.add('positive');
+    else if (r.priceChangePct > 0) priceEl.classList.add('negative');
+
+    const rangeEl = el('metricPriceRange');
+    rangeEl.textContent = `Range: ${r.priceChangePctHigh.toFixed(1)}% to ${r.priceChangePctLow.toFixed(1)}%`;
+    el('metricNewPrice').textContent =
+      `${fmt(r.basePrice)} \u2192 ${fmt(r.newPrice)}`;
+
+    const depEl = el('metricDepositSaving');
+    depEl.textContent = '+' + fmt(Math.abs(r.depositSaving));
+    depEl.classList.remove('positive', 'negative');
+    if (r.depositSaving > 0) depEl.classList.add('positive');
+
+    el('metricYearsSaved').textContent =
+      r.yearsSaved > 0
+        ? `Buy ${r.yearsSaved.toFixed(1)} years sooner`
+        : 'No time saving at current settings';
+
+    const revEl = el('metricRevenue');
+    revEl.textContent = '+$' + r.revenueGainBillions.toFixed(1) + 'B';
+    revEl.classList.remove('positive', 'negative');
+    if (r.revenueGainBillions > 0) revEl.classList.add('positive');
+    el('metricRevenueSub').textContent = 'Annual additional revenue';
+
+    const fhbEl = el('metricFhbShare');
+    fhbEl.textContent = '+' + r.fhbShareChangePp.toFixed(1) + 'pp';
+    fhbEl.classList.remove('positive', 'negative');
+    if (r.fhbShareChangePp > 0) fhbEl.classList.add('positive');
+    el('metricFhbShareSub').textContent =
+      `${DATA.lending.fhbSharePct.toFixed(1)}% \u2192 ${r.newFhbShare.toFixed(1)}%`;
+  }
+
+  /* ====== Section D: Your Housing Future (projection metrics) ====== */
   function updateProjectionMetrics(proj) {
     const endYear = proj.baseYear + proj.horizonYears;
-    const el = id => document.getElementById(id);
-
-    // End year labels
-    const endYrStr = endYear.toString();
-    el('projEndYearLabel').textContent = endYrStr;
-    el('projEndYearLabel2').textContent = endYrStr;
+    el('projEndYearLabel').textContent = endYear;
+    el('projEndYearLabel2').textContent = endYear;
 
     const lastNR = proj.noReform.years[proj.noReform.years.length - 1];
     const lastWR = proj.withReform.years[proj.withReform.years.length - 1];
 
-    // Prices at end of horizon
-    el('metricProjPriceNoReform').textContent = formatCurrency(lastNR.price);
-    el('metricProjPriceReform').textContent = formatCurrency(lastWR.price);
-    el('metricProjPriceReform').className = 'metric-value ' +
-      (lastWR.price < lastNR.price ? 'positive' : '');
+    el('metricProjPriceNoReform').textContent = fmt(lastNR.price);
 
-    // Price saving
+    const priceReformEl = el('metricProjPriceReform');
+    priceReformEl.textContent = fmt(lastWR.price);
+    priceReformEl.classList.remove('positive', 'negative');
+    if (lastWR.price < lastNR.price) priceReformEl.classList.add('positive');
+
     const diff = lastNR.price - lastWR.price;
-    el('metricProjPriceDiff').textContent = formatCurrency(Math.abs(diff));
-    el('metricProjPriceDiff').className = 'metric-value ' + (diff > 0 ? 'positive' : '');
+    const diffEl = el('metricProjPriceDiff');
+    diffEl.textContent = fmt(Math.abs(diff));
+    diffEl.classList.remove('positive', 'negative');
+    if (diff > 0) diffEl.classList.add('positive');
+
     const diffPct = lastNR.price > 0 ? ((diff / lastNR.price) * 100).toFixed(1) : '0';
     el('metricProjPriceDiffPct').textContent = diff > 0
       ? `${diffPct}% lower with reform`
       : 'No reform selected';
 
-    // Buy year
     el('metricProjBuyNoReform').textContent = proj.buyYearNoReform || 'Beyond horizon';
-    el('metricProjBuyReform').textContent = proj.buyYearWithReform || 'Beyond horizon';
-    el('metricProjBuyReform').className = 'metric-value ' +
-      (proj.buyYearWithReform && proj.buyYearNoReform && proj.buyYearWithReform < proj.buyYearNoReform
-        ? 'positive' : '');
+
+    const buyReformEl = el('metricProjBuyReform');
+    buyReformEl.textContent = proj.buyYearWithReform || 'Beyond horizon';
+    buyReformEl.classList.remove('positive', 'negative');
+    if (proj.buyYearWithReform && proj.buyYearNoReform && proj.buyYearWithReform < proj.buyYearNoReform) {
+      buyReformEl.classList.add('positive');
+    }
 
     if (proj.buyYearsSaved && proj.buyYearsSaved > 0) {
       el('metricProjBuySaved').textContent =
@@ -71,153 +164,60 @@ const UI = (() => {
       el('metricProjBuySaved').textContent = 'With reform';
     }
 
-    // Price-to-income
     el('metricProjPtiNoReform').textContent = lastNR.priceToIncome.toFixed(1) + 'x';
-    el('metricProjPtiReform').textContent = lastWR.priceToIncome.toFixed(1) + 'x';
-    el('metricProjPtiReform').className = 'metric-value ' +
-      (lastWR.priceToIncome < lastNR.priceToIncome ? 'positive' : '');
 
-    // Derived growth rate
-    const dgEl = el('metricDerivedGrowth');
-    if (dgEl) {
-      dgEl.textContent = proj.derivedGrowthPct.toFixed(1) + '% p.a.';
-    }
-    const dgSub = el('metricDerivedGrowthSub');
-    if (dgSub) {
-      dgSub.textContent = `Income ${proj.incomeGrowthPct.toFixed(0)}% + supply gap ${proj.supplyPremiumPct.toFixed(1)}%`;
-    }
+    const ptiReformEl = el('metricProjPtiReform');
+    ptiReformEl.textContent = lastWR.priceToIncome.toFixed(1) + 'x';
+    ptiReformEl.classList.remove('positive', 'negative');
+    if (lastWR.priceToIncome < lastNR.priceToIncome) ptiReformEl.classList.add('positive');
   }
 
-  function updateMetricCards(result) {
-    const priceEl = document.getElementById('metricPriceChange');
-    priceEl.textContent = (result.priceChangePct >= 0 ? '+' : '') + result.priceChangePct.toFixed(2) + '%';
-    priceEl.className = 'metric-value ' + (result.priceChangePct < 0 ? 'positive' : result.priceChangePct > 0 ? 'negative' : '');
+  /* ====== Summary narrative ====== */
+  function buildSummary(r, proj) {
+    const depPctLabel = Math.round(r.depositPctUsed * 100) + '%';
+    const savLabel = fmt(r.annualSavingsUsed);
+    const endYear = proj.baseYear + proj.horizonYears;
+    const lastNR = proj.noReform.years[proj.noReform.years.length - 1];
+    const lastWR = proj.withReform.years[proj.withReform.years.length - 1];
+    const projSaving = lastNR.price - lastWR.price;
 
-    const rangeEl = document.getElementById('metricPriceRange');
-    if (rangeEl) {
-      if (result.cgtDiscount === 50) {
-        rangeEl.textContent = '';
+    const situationText = `The mean dwelling price in ${r.cityLabel} is <strong>${fmt(r.basePrice)}</strong>. ` +
+      `A ${depPctLabel} deposit is ${fmt(r.currentDeposit)}, taking ${r.currentYearsToSave.toFixed(1)} years to save at ${savLabel}/year. ` +
+      `Price growth is running at ${r.derivedGrowthPct.toFixed(1)}% p.a. ` +
+      `(${r.incomeGrowthPct.toFixed(0)}% income growth + ${r.supplyPremiumPct.toFixed(1)}% supply gap premium), ` +
+      `driven by a supply gap of ${r.existingGap.toLocaleString()} dwellings/year.`;
+
+    if (r.cgtDiscount === 50 && r.ngEnabled) {
+      let projNote = ` By ${endYear}, prices are projected to reach ${fmt(lastNR.price)}.`;
+      if (proj.buyYearNoReform) {
+        projNote += ` You could afford a deposit by ${proj.buyYearNoReform}.`;
       } else {
-        rangeEl.textContent = `Range: ${result.priceChangePctHigh.toFixed(1)}% to ${result.priceChangePctLow.toFixed(1)}%`;
+        projNote += ` The deposit is not reachable within ${proj.horizonYears} years.`;
       }
+      return `<strong>Current policy:</strong> ${situationText}${projNote}`;
     }
 
-    document.getElementById('metricNewPrice').textContent = formatCurrency(result.newPrice);
-    const basePriceNote = result.migPriceAdjustPct !== 0
-      ? `from ${formatCurrency(result.basePrice)} (observed ${formatCurrency(result.observedPrice)}, migration ${result.migPriceAdjustPct > 0 ? '+' : ''}${result.migPriceAdjustPct.toFixed(1)}%)`
-      : 'from ' + formatCurrency(result.basePrice);
-    document.getElementById('metricBasePrice').textContent = basePriceNote;
+    const parts = [];
+    if (r.cgtDiscount !== 50) parts.push(`reducing the CGT discount to ${r.cgtDiscount}%`);
+    if (!r.ngEnabled) parts.push('removing negative gearing');
+    const reforms = parts.join(' and ');
 
-    document.getElementById('metricDepositSaving').textContent =
-      (result.depositSaving >= 0 ? '+' : '-') + formatCurrency(Math.abs(result.depositSaving));
-    document.getElementById('metricDepositSaving').className =
-      'metric-value ' + (result.depositSaving > 0 ? 'positive' : result.depositSaving < 0 ? 'negative' : '');
+    let reformText = ` Reform impact: prices ${r.priceChangePct.toFixed(1)}% ` +
+      `(range ${r.priceChangePctHigh.toFixed(1)}% to ${r.priceChangePctLow.toFixed(1)}%), ` +
+      `saving ${fmt(Math.abs(r.depositSaving))} on deposit, ` +
+      `generating +$${r.revenueGainBillions.toFixed(1)}B in revenue.`;
 
-    document.getElementById('metricYearsSaved').textContent =
-      (result.yearsSaved >= 0 ? '' : '+') + result.yearsSaved.toFixed(1) + ' years';
-    document.getElementById('metricYearsSaved').className =
-      'metric-value ' + (result.yearsSaved > 0 ? 'positive' : '');
-
-    document.getElementById('metricFhbShare').textContent =
-      (result.fhbShareChangePp >= 0 ? '+' : '') + result.fhbShareChangePp.toFixed(1) + 'pp';
-    document.getElementById('metricFhbShare').className =
-      'metric-value ' + (result.fhbShareChangePp > 0 ? 'positive' : '');
-
-    document.getElementById('metricRevenue').textContent =
-      '+$' + result.revenueGainBillions.toFixed(1) + 'B';
-    document.getElementById('metricRevenue').className =
-      'metric-value ' + (result.revenueGainBillions > 0 ? 'positive' : '');
-
-    document.getElementById('metricEffectiveCgt').textContent =
-      result.newEffectiveCgt.toFixed(1) + '%';
-    document.getElementById('metricEffectiveCgtBase').textContent =
-      'from ' + result.currentEffectiveCgt.toFixed(1) + '%';
-
-    document.getElementById('metricReturnReduction').textContent =
-      result.returnReductionPct.toFixed(1) + '%';
-
-    document.getElementById('metricStampDuty').textContent =
-      formatCurrency(result.stampDutyNew.fhb);
-    document.getElementById('metricStampDutyBase').textContent =
-      'Standard: ' + formatCurrency(result.stampDutyNew.standard);
-    document.getElementById('metricStampDutyNote').textContent =
-      result.stampDutyNew.fhbNote;
-
-    document.getElementById('metricTotalUpfront').textContent =
-      formatCurrency(result.totalUpfrontNew);
-    document.getElementById('metricTotalUpfrontSaving').textContent =
-      result.totalUpfrontSaving > 0
-        ? 'Saving ' + formatCurrency(result.totalUpfrontSaving)
-        : '';
-    document.getElementById('metricTotalUpfrontSaving').className =
-      'metric-sub ' + (result.totalUpfrontSaving > 0 ? 'positive-text' : '');
-
-    document.getElementById('metricMonthly').textContent =
-      formatCurrency(result.monthlyPayment) + '/mo';
-    document.getElementById('metricMonthlyBase').textContent =
-      'was ' + formatCurrency(result.baseMonthlyPayment) + '/mo';
-    document.getElementById('metricIncomeNeeded').textContent =
-      formatCurrency(result.incomeNeeded);
-
-    document.getElementById('metricConstruction').textContent =
-      result.constructionImpactAnnual === 0 ? '0'
-        : (result.constructionImpactAnnual > 0 ? '+' : '') + result.constructionImpactAnnual.toLocaleString();
-    document.getElementById('metricConstruction').className =
-      'metric-value ' + (result.constructionImpactAnnual < 0 ? 'negative' : '');
-
-    document.getElementById('metricRent').textContent =
-      result.rentImpactWeekly === 0 ? '$0'
-        : '+$' + result.rentImpactWeekly.toFixed(2) + '/wk';
-    document.getElementById('metricRent').className =
-      'metric-value ' + (result.rentImpactWeekly > 0 ? 'negative' : '');
-
-    const migPriceEl = document.getElementById('metricMigPrice');
-    if (migPriceEl) {
-      migPriceEl.textContent = result.migPriceAdjustPct === 0
-        ? '0%'
-        : (result.migPriceAdjustPct > 0 ? '+' : '') + result.migPriceAdjustPct.toFixed(1) + '%';
-      migPriceEl.className = 'metric-value ' +
-        (result.migPriceAdjustPct > 0 ? 'negative' : result.migPriceAdjustPct < 0 ? 'positive' : '');
+    let projText = ` By ${endYear}, prices would be ${fmt(lastWR.price)} with reform vs ${fmt(lastNR.price)} without \u2014 ` +
+      `a saving of <strong>${fmt(projSaving)}</strong>.`;
+    if (proj.buyYearsSaved && proj.buyYearsSaved > 0) {
+      projText += ` You could buy <strong>${proj.buyYearsSaved} year${proj.buyYearsSaved !== 1 ? 's' : ''} sooner</strong>.`;
     }
-    const migPriceSub = document.getElementById('metricMigPriceSub');
-    if (migPriceSub) {
-      if (result.migPriceAdjustPct === 0) {
-        migPriceSub.textContent = 'NOM at baseline (306K) \u2014 no price adjustment';
-      } else {
-        const sign = v => v > 0 ? '+' : '';
-        migPriceSub.textContent =
-          `Demand ${sign(result.migDemandPricePct)}${result.migDemandPricePct.toFixed(1)}% + ` +
-          `supply gap ${sign(result.migGapPricePct)}${result.migGapPricePct.toFixed(1)}% = ` +
-          `${formatCurrency(Math.abs(result.basePrice - result.observedPrice))} ${result.migPriceAdjustPct > 0 ? 'higher' : 'lower'}`;
-      }
-    }
+    projText += ` Price-to-income: ${lastWR.priceToIncome.toFixed(1)}x with reform vs ${lastNR.priceToIncome.toFixed(1)}x without.`;
 
-    document.getElementById('metricMigDemand').textContent =
-      result.migrationDwellingDemand.toLocaleString() + '/yr';
-    const migSub = document.getElementById('metricMigDemandSub');
-    if (migSub) {
-      migSub.textContent = `NOM ${(result.nom / 1000).toFixed(0)}K \u00F7 ${result.householdSize.toFixed(1)} ppd`;
-    }
-
-    document.getElementById('metricSupplyGap').textContent =
-      result.existingGap.toLocaleString() + '/yr';
-    document.getElementById('metricSupplyGap').className =
-      'metric-value ' + (result.existingGap > 0 ? 'negative' : 'positive');
-    const gapSub = document.getElementById('metricSupplyGapSub');
-    if (gapSub) {
-      gapSub.textContent = `Demand ${result.totalDwellingDemand.toLocaleString()}/yr - construction ${result.currentConstruction.toLocaleString()}/yr`;
-    }
-
-    document.getElementById('metricCgtVsGap').textContent =
-      result.existingGap > 0 ? result.constructionAsPctOfGap.toFixed(1) + '%' : 'N/A';
-    document.getElementById('metricCgtVsGapNote').textContent =
-      result.constructionImpactAnnual === 0
-        ? 'No CGT reform selected'
-        : result.existingGap > 0
-          ? `CGT reform impact (${Math.abs(result.constructionImpactAnnual).toLocaleString()} homes) is ${result.constructionAsPctOfGap.toFixed(1)}% of the ${result.existingGap.toLocaleString()}/yr supply gap`
-          : 'No supply gap at current settings';
+    return `<strong>Modelled scenario:</strong> ${reforms}. ${situationText}${reformText}${projText}`;
   }
 
+  /* ====== Master update ====== */
   function updateAll() {
     try {
       const ov = getOverrides();
@@ -228,7 +228,9 @@ const UI = (() => {
       const sweepNoNG = Model.computeSweep(false, currentCity, 5, currentRate, ov);
       const proj = Model.computeProjection(currentDiscount, ngEnabled, currentCity, currentRate, ov);
 
-      updateMetricCards(result);
+      updateSituationCards(result);
+      updateDriverCards(result);
+      updateReformCards(result);
       updateProjectionMetrics(proj);
 
       Charts.updateTrajectoryChart(proj);
@@ -240,63 +242,15 @@ const UI = (() => {
       Charts.updateRevenueChart(sweepNG, sweepNoNG);
       Charts.updateSupplyChart(sweepCurrent);
 
-      document.getElementById('cityLabel').textContent = result.cityLabel;
-      document.getElementById('scenarioSummary').innerHTML = buildSummary(result, proj);
+      el('scenarioSummary').innerHTML = buildSummary(result, proj);
 
       const ngLabel = document.querySelector('.toggle-label');
       ngLabel.textContent = ngEnabled ? 'Enabled (current policy)' : 'Disabled';
     } catch (e) {
       console.error('Model update error:', e);
-      const summary = document.getElementById('scenarioSummary');
-      if (summary) summary.innerHTML = '<strong>Error:</strong> ' + e.message + ' — please try a hard refresh (Ctrl+Shift+R).';
+      const summary = el('scenarioSummary');
+      if (summary) summary.innerHTML = '<strong>Error:</strong> ' + e.message + ' \u2014 please try a hard refresh (Ctrl+Shift+R).';
     }
-  }
-
-  function buildSummary(r, proj) {
-    const depPctLabel = Math.round(r.depositPctUsed * 100) + '%';
-    const savLabel = formatCurrency(r.annualSavingsUsed);
-    const nomLabel = (r.nom / 1000).toFixed(0) + 'K';
-    const endYear = proj.baseYear + proj.horizonYears;
-
-    const migNote = r.migPriceAdjustPct !== 0
-      ? ` At NOM ${nomLabel} (vs baseline 306K), migration pressure ${r.migPriceAdjustPct > 0 ? 'raises' : 'lowers'} ` +
-        `the baseline from ${formatCurrency(r.observedPrice)} to ${formatCurrency(r.basePrice)} ` +
-        `(${r.migPriceAdjustPct > 0 ? '+' : ''}${r.migPriceAdjustPct.toFixed(1)}%).`
-      : '';
-
-    const lastNR = proj.noReform.years[proj.noReform.years.length - 1];
-    const lastWR = proj.withReform.years[proj.withReform.years.length - 1];
-    const projSaving = lastNR.price - lastWR.price;
-
-    if (r.cgtDiscount === 50 && r.ngEnabled) {
-      let projNote = ` Over ${proj.horizonYears} years (derived growth ${proj.derivedGrowthPct.toFixed(1)}% p.a. from ${proj.incomeGrowthPct.toFixed(0)}% income + ${proj.supplyPremiumPct.toFixed(1)}% supply gap), prices are projected to reach ${formatCurrency(lastNR.price)} by ${endYear}.`;
-      if (proj.buyYearNoReform) {
-        projNote += ` At ${savLabel}/year savings, you could afford a ${depPctLabel} deposit by ${proj.buyYearNoReform}.`;
-      } else {
-        projNote += ` At ${savLabel}/year savings, the ${depPctLabel} deposit is not reachable within ${proj.horizonYears} years.`;
-      }
-      return `<strong>Current policy:</strong> 50% CGT discount with negative gearing. ` +
-        `The mean dwelling price in ${r.cityLabel} is ${formatCurrency(r.basePrice)}.${migNote}${projNote}`;
-    }
-
-    const parts = [];
-    if (r.cgtDiscount !== 50) parts.push(`reducing the CGT discount from 50% to ${r.cgtDiscount}%`);
-    if (!r.ngEnabled) parts.push('removing negative gearing');
-    const reforms = parts.join(' and ');
-
-    let projNote = ` By ${endYear}, dwelling prices would be ${formatCurrency(lastWR.price)} with reform vs ${formatCurrency(lastNR.price)} without — ` +
-      `a saving of <strong>${formatCurrency(projSaving)}</strong>.`;
-
-    if (proj.buyYearWithReform && proj.buyYearNoReform) {
-      if (proj.buyYearsSaved > 0) {
-        projNote += ` You could buy <strong>${proj.buyYearsSaved} year${proj.buyYearsSaved !== 1 ? 's' : ''} sooner</strong> (${proj.buyYearWithReform} vs ${proj.buyYearNoReform}).`;
-      }
-    } else if (proj.buyYearWithReform && !proj.buyYearNoReform) {
-      projNote += ` With reform you could buy by ${proj.buyYearWithReform}; without reform the deposit is out of reach within the horizon.`;
-    }
-
-    return `<strong>Modelled scenario:</strong> ${reforms} (derived price growth: ${proj.derivedGrowthPct.toFixed(1)}% p.a.).${migNote}${projNote}` +
-      ` The price-to-income ratio would be ${lastWR.priceToIncome.toFixed(1)}x with reform vs ${lastNR.priceToIncome.toFixed(1)}x without.`;
   }
 
   function init() {
@@ -310,15 +264,13 @@ const UI = (() => {
       updateAll();
     });
 
-    const ngToggle = document.getElementById('ngToggle');
-    ngToggle.addEventListener('change', () => {
-      ngEnabled = ngToggle.checked;
+    document.getElementById('ngToggle').addEventListener('change', function () {
+      ngEnabled = this.checked;
       updateAll();
     });
 
-    const citySelect = document.getElementById('citySelect');
-    citySelect.addEventListener('change', () => {
-      currentCity = citySelect.value;
+    document.getElementById('citySelect').addEventListener('change', function () {
+      currentCity = this.value;
       updateAll();
     });
 
@@ -372,7 +324,6 @@ const UI = (() => {
       });
     }
 
-    // Projection controls
     const horizonSlider = document.getElementById('horizonSlider');
     const horizonValue = document.getElementById('horizonSliderValue');
     if (horizonSlider) {
@@ -393,7 +344,6 @@ const UI = (() => {
       });
     }
 
-    // Preset buttons
     document.querySelectorAll('[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
         const preset = btn.dataset.preset;
@@ -403,12 +353,11 @@ const UI = (() => {
         else if (preset === 'full') { currentDiscount = 0; ngEnabled = false; }
         slider.value = currentDiscount;
         sliderValue.textContent = currentDiscount + '%';
-        ngToggle.checked = ngEnabled;
+        document.getElementById('ngToggle').checked = ngEnabled;
         updateAll();
       });
     });
 
-    // Accordions
     document.querySelectorAll('.accordion-toggle').forEach(btn => {
       btn.addEventListener('click', () => {
         const target = document.getElementById(btn.dataset.target);

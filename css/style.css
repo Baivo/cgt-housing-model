@@ -121,6 +121,13 @@ header .badge {
   align-items: end;
 }
 
+.controls-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: end;
+}
+
 .controls-grid-4 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -344,6 +351,22 @@ select:focus { border-color: var(--accent); }
 .metric-card:hover {
   box-shadow: var(--shadow);
   border-color: var(--border-strong);
+}
+
+.metrics-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.reform-placeholder {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.25rem;
+  margin: 0.6rem 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .metric-label {
@@ -598,12 +621,14 @@ footer a:hover { text-decoration: underline; }
   html { font-size: 14px; }
 
   .controls-grid,
+  .controls-grid-2,
   .controls-grid-4 {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
 
-  .metrics-grid {
+  .metrics-grid,
+  .metrics-grid-3 {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -623,7 +648,8 @@ footer a:hover { text-decoration: underline; }
 
   header h1 { font-size: 1.1rem; }
 
-  .metrics-grid {
+  .metrics-grid,
+  .metrics-grid-3 {
     grid-template-columns: 1fr;
   }
 
