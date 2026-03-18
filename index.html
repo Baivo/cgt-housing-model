@@ -115,7 +115,7 @@
 
     <div class="controls-section">
       <div class="controls-section-label">Projection Assumptions</div>
-      <div class="controls-grid-4">
+      <div class="controls-grid">
         <div class="control-group">
           <label for="horizonSlider">Projection Horizon</label>
           <div class="slider-container">
@@ -125,19 +125,19 @@
         </div>
 
         <div class="control-group">
-          <label for="priceGrowthSlider">Price Growth (p.a.)</label>
-          <div class="slider-container">
-            <input type="range" id="priceGrowthSlider" min="0" max="10" step="0.5" value="6.5">
-            <span class="slider-value slider-value-sm" id="priceGrowthSliderValue">6.5%</span>
-          </div>
-        </div>
-
-        <div class="control-group">
           <label for="incomeGrowthSlider">Income Growth (p.a.)</label>
           <div class="slider-container">
             <input type="range" id="incomeGrowthSlider" min="0" max="6" step="0.5" value="3.0">
             <span class="slider-value slider-value-sm" id="incomeGrowthSliderValue">3.0%</span>
           </div>
+        </div>
+
+        <div class="control-group">
+          <label>Derived Price Growth</label>
+          <div class="slider-container" style="justify-content: flex-start;">
+            <span class="slider-value slider-value-sm" id="metricDerivedGrowth" style="text-align: left;">—</span>
+          </div>
+          <div class="metric-sub" id="metricDerivedGrowthSub" style="margin-top: 0.2rem;">Income + supply gap premium</div>
         </div>
       </div>
     </div>
@@ -434,6 +434,32 @@
         user-configurable horizon (5&ndash;20 years). It runs <strong>two parallel simulations</strong> &mdash;
         one under current policy and one under the selected reform &mdash; to show how differences compound over time.
       </p>
+
+      <h4>Derived Price Growth (Not an Arbitrary Input)</h4>
+      <p>
+        Price growth is <strong>not set manually</strong>. Instead, it is derived each year from two fundamentals:
+      </p>
+      <p>
+        <code>price_growth = income_growth + (annual_supply_gap / dwelling_stock) &times; 8.5</code>
+      </p>
+      <ul>
+        <li><strong>Income growth</strong> (adjustable, default 3.0% p.a.) is the equilibrium anchor &mdash; in a market
+          where supply meets demand, house prices track incomes over the long run.</li>
+        <li><strong>Supply gap premium</strong> captures the structural undersupply. The annual gap between
+          dwelling demand and construction, expressed as a share of total housing stock, is multiplied by a
+          calibration factor of 8.5 to produce the excess price growth above income growth.</li>
+      </ul>
+      <p>
+        <strong>Calibration:</strong> At current conditions (demand ~223K, construction ~177K, gap = 46K, stock = 11.45M),
+        the formula yields: 3.0% + (46K &divide; 11.45M) &times; 8.5 = 3.0% + 3.4% = <strong>6.4% p.a.</strong> &mdash;
+        consistent with long-run Australian dwelling price growth of ~6&ndash;7% p.a.
+      </p>
+      <p>
+        This approach means migration, household size, and construction capacity all feed into price growth
+        automatically. Increasing NOM widens the gap and accelerates prices; reducing it narrows or reverses the gap.
+        No arbitrary &ldquo;price growth assumption&rdquo; is needed.
+      </p>
+
       <p>Each year in the simulation:</p>
       <ol>
         <li><strong>Population</strong> grows by the user-selected Net Overseas Migration (NOM) per year.</li>
@@ -441,13 +467,10 @@
         <li><strong>Construction</strong> starts from the baseline (~177,000/yr) and incorporates the CGT reform's
           construction impact as it phases in over 5 years (Grattan approach).</li>
         <li><strong>Dwelling stock</strong> grows by annual construction.</li>
-        <li><strong>Price growth</strong> each year combines four components:
+        <li><strong>Price growth</strong> each year combines:
           <ul>
-            <li><em>Baseline capital growth</em> (user-adjustable, default 6.5% p.a.)</li>
-            <li><em>Migration demand pressure</em>: population change relative to total population, scaled by the
-              migration-price elasticity (Tran &amp; Faff, 2023)</li>
-            <li><em>Supply gap scarcity</em>: when demand exceeds construction, the gap relative to total housing
-              stock creates additional upward price pressure (coefficient 0.5)</li>
+            <li><em>Income growth</em> (adjustable, default 3.0% p.a.)</li>
+            <li><em>Supply gap premium</em>: (demand &minus; construction) / stock &times; 8.5</li>
             <li><em>CGT reform effect</em>: the calibrated price impact phases in linearly over 5 years</li>
           </ul>
         </li>
@@ -487,8 +510,9 @@
         <li><strong>Net overseas migration: 306,000 (adjustable 0-500K)</strong></li>
         <li><strong>Persons per dwelling: 2.5 (adjustable 2.0-3.0)</strong></li>
         <li><strong>Projection horizon: 10 years (adjustable 5-20)</strong></li>
-        <li><strong>Baseline price growth: 6.5% p.a. (adjustable 0-10%)</strong></li>
+        <li><strong>Price growth: derived</strong> from income growth + supply gap premium (not user-set)</li>
         <li><strong>Income growth: 3.0% p.a. (adjustable 0-6%)</strong> &mdash; ABS Wage Price Index long-run trend</li>
+        <li>Supply gap premium multiplier: 8.5 (calibrated to historical AU price growth ~6.5% vs income growth ~3%)</li>
       </ul>
 
       <h4>Migration Price Effect Model</h4>
@@ -547,7 +571,8 @@
       <h4>Remaining Limitations</h4>
       <ul>
         <li>Uses piecewise linear interpolation calibrated to published estimates, not a full general equilibrium model</li>
-        <li>Projection assumes constant annual NOM, construction capacity, and growth rates; real-world values fluctuate with economic cycles</li>
+        <li>Projection assumes constant annual NOM and construction capacity; real-world values fluctuate with economic cycles</li>
+        <li>Supply gap premium multiplier (8.5) is calibrated to historical averages; actual sensitivity may vary by market cycle</li>
         <li>Supply-side estimates are scaled linearly from a single calibration point (Grattan, 25% discount); actual supply responses may be non-linear</li>
         <li>Stamp duty schedules are simplified approximations; actual duty may vary based on property type, eligibility, and concession changes</li>
         <li>Does not model state-level land tax or planning regulation differences beyond stamp duty</li>

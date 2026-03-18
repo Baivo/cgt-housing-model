@@ -11,7 +11,6 @@ const UI = (() => {
   let currentSavings = 40000;
   let currentDepositPct = 0.20;
   let currentHorizon = 10;
-  let currentPriceGrowth = 6.5;
   let currentIncomeGrowth = 3.0;
 
   function getOverrides() {
@@ -21,7 +20,6 @@ const UI = (() => {
       annualSavings: currentSavings,
       depositPct: currentDepositPct,
       horizonYears: currentHorizon,
-      baseGrowthPct: currentPriceGrowth,
       incomeGrowthPct: currentIncomeGrowth
     };
   }
@@ -78,6 +76,16 @@ const UI = (() => {
     el('metricProjPtiReform').textContent = lastWR.priceToIncome.toFixed(1) + 'x';
     el('metricProjPtiReform').className = 'metric-value ' +
       (lastWR.priceToIncome < lastNR.priceToIncome ? 'positive' : '');
+
+    // Derived growth rate
+    const dgEl = el('metricDerivedGrowth');
+    if (dgEl) {
+      dgEl.textContent = proj.derivedGrowthPct.toFixed(1) + '% p.a.';
+    }
+    const dgSub = el('metricDerivedGrowthSub');
+    if (dgSub) {
+      dgSub.textContent = `Income ${proj.incomeGrowthPct.toFixed(0)}% + supply gap ${proj.supplyPremiumPct.toFixed(1)}%`;
+    }
   }
 
   function updateMetricCards(result) {
@@ -255,7 +263,7 @@ const UI = (() => {
     const projSaving = lastNR.price - lastWR.price;
 
     if (r.cgtDiscount === 50 && r.ngEnabled) {
-      let projNote = ` Over ${proj.horizonYears} years at ${currentPriceGrowth}% growth, prices are projected to reach ${formatCurrency(lastNR.price)} by ${endYear}.`;
+      let projNote = ` Over ${proj.horizonYears} years (derived growth ${proj.derivedGrowthPct.toFixed(1)}% p.a. from ${proj.incomeGrowthPct.toFixed(0)}% income + ${proj.supplyPremiumPct.toFixed(1)}% supply gap), prices are projected to reach ${formatCurrency(lastNR.price)} by ${endYear}.`;
       if (proj.buyYearNoReform) {
         projNote += ` At ${savLabel}/year savings, you could afford a ${depPctLabel} deposit by ${proj.buyYearNoReform}.`;
       } else {
@@ -365,16 +373,6 @@ const UI = (() => {
       horizonSlider.addEventListener('input', () => {
         currentHorizon = parseInt(horizonSlider.value, 10);
         horizonValue.textContent = currentHorizon + ' yrs';
-        updateAll();
-      });
-    }
-
-    const pgSlider = document.getElementById('priceGrowthSlider');
-    const pgValue = document.getElementById('priceGrowthSliderValue');
-    if (pgSlider) {
-      pgSlider.addEventListener('input', () => {
-        currentPriceGrowth = parseFloat(pgSlider.value);
-        pgValue.textContent = currentPriceGrowth.toFixed(1) + '%';
         updateAll();
       });
     }

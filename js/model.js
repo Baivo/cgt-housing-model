@@ -42,6 +42,12 @@ const Model = (() => {
   const FHB_SHARE_RATE_PER_PP = 0.10;
   const NG_FHB_SHARE_PP = 2.2;
 
+  // Supply-demand imbalance → price premium multiplier.
+  // Calibrated: historical AU price growth ~6.5%, income growth ~3%, premium ~3.5%.
+  // At baseline gap 46K / stock 11.45M = 0.402%, multiplier = 3.5% / 0.402% ≈ 8.5.
+  // Price growth = income_growth + (annual_gap / dwelling_stock) * SUPPLY_PREMIUM_MULT.
+  const SUPPLY_PREMIUM_MULT = 8.5;
+
   // Supply-side calibration (Grattan: -2000 homes/year at 25% discount)
   const CONSTRUCTION_RATE_PER_PP = -80; // homes/year per 1pp discount reduction
 
@@ -392,7 +398,6 @@ const Model = (() => {
     const nom = ov.nom != null ? ov.nom : DATA.migration.netOverseasMigration.current;
     const householdSize = ov.householdSize != null ? ov.householdSize : DATA.migration.housingDemand.averageHouseholdSize;
     const horizonYears = ov.horizonYears || DATA.assumptions.projectionHorizonYears;
-    const baseGrowthRate = (ov.baseGrowthPct != null ? ov.baseGrowthPct : DATA.assumptions.averageAnnualCapitalGrowthPct) / 100;
     const incomeGrowthRate = (ov.incomeGrowthPct != null ? ov.incomeGrowthPct : DATA.assumptions.nominalIncomeGrowthPct) / 100;
     const baseYear = DATA.assumptions.baseYear;
 
@@ -464,26 +469,20 @@ const Model = (() => {
         const annualGap = yr === 0 ? 0 : dwellingDemand - construction;
         cumulativeGap += annualGap;
 
-        // Price evolution
+        // Price evolution — derived from fundamentals, not an arbitrary growth rate.
+        // Income growth is the equilibrium anchor; the supply-demand gap drives
+        // prices above (or below) income growth.
         if (yr > 0) {
-          // 1. Baseline capital growth
-          let yearlyGrowth = baseGrowthRate;
+          // 1. Income growth (long-run equilibrium: balanced supply → prices track incomes)
+          let yearlyGrowth = incomeGrowthRate;
 
-          // 2. Migration demand pressure (incremental, each year's NOM adds to population)
-          const nomDev = nom - baselineNom;
-          if (nomDev !== 0) {
-            const annualPopChangePct = (nomDev / pop) * 100;
-            yearlyGrowth += (annualPopChangePct * migElasticity) / 100;
-          }
+          // 2. Supply-demand imbalance premium: gap / stock × multiplier
+          //    This single channel captures both migration pressure (via demand)
+          //    and construction capacity (via supply). No arbitrary base rate needed.
+          const currentGap = dwellingDemand - construction;
+          yearlyGrowth += (currentGap / stock) * SUPPLY_PREMIUM_MULT;
 
-          // 3. Supply gap scarcity pressure
-          const gapDev = dwellingDemand - construction -
-                        (baselineAnnualDemand - annualConstruction);
-          if (gapDev !== 0) {
-            yearlyGrowth += (gapDev / stock) * SUPPLY_GAP_COEFF;
-          }
-
-          // 4. CGT reform effect (phased in over 5 years)
+          // 3. CGT reform effect (phased in over 5 years)
           if (applyReform) {
             const phaseIn = Math.min(yr / PHASE_IN_YEARS, 1.0);
             const prevPhaseIn = Math.min((yr - 1) / PHASE_IN_YEARS, 1.0);
@@ -547,6 +546,10 @@ const Model = (() => {
     const noReform = simulate(false);
     const withReform = simulate(true);
 
+    // Derived baseline growth rate (year 1 conditions, for display)
+    const baselineGap = annualTotalDemand - annualConstruction;
+    const derivedGrowthPct = (incomeGrowthRate + (baselineGap / startStock) * SUPPLY_PREMIUM_MULT) * 100;
+
     // Year-by-year difference
     const difference = noReform.years.map((nr, i) => {
       const wr = withReform.years[i];
@@ -575,6 +578,9 @@ const Model = (() => {
         : null,
       finalPriceDiff: difference[difference.length - 1].priceDiff,
       finalPriceDiffPct: difference[difference.length - 1].priceDiffPct,
+      derivedGrowthPct: Math.round(derivedGrowthPct * 100) / 100,
+      incomeGrowthPct: incomeGrowthRate * 100,
+      supplyPremiumPct: Math.round((baselineGap / startStock) * SUPPLY_PREMIUM_MULT * 10000) / 100,
       cgtDiscount,
       ngEnabled,
       nom,
