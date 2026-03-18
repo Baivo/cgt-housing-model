@@ -256,6 +256,16 @@ const DATA = {
       sourceUrl: "https://treasury.gov.au/housing-policy/accord",
       note: "No state or territory is forecast to meet its share of the 1.2M target."
     },
+    priceElasticity: {
+      central: 1.0,
+      low: 0.5,
+      high: 1.5,
+      unit: "% price change per 1% population change",
+      source: "Derived from 2SLS estimates (1.16-1.59%) in Tran & Faff (2023); OLS estimates 0.41-0.46%; OECD cross-country ~1.4pp/pp (Gevorgyan). Central estimate of 1.0 is conservative.",
+      sourceUrl: "https://www.nature.com/articles/s42949-023-00136-7",
+      note: "Elasticity of home prices w.r.t. city population. 2SLS with climate-visa IV using Australian panel data.",
+      baselinePopulation: 27000000
+    },
     populationProjection: {
       population2036: 31500000,
       growthOver11yr: 3860000,

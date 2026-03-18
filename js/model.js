@@ -149,7 +149,7 @@ const Model = (() => {
     const rate = interestRate || 0.06;
     const ov = overrides || {};
     const city = DATA.dwellingPrices.data[cityKey];
-    const basePrice = city.price;
+    const observedPrice = city.price;
     const multiplier = cityKey === 'national' ? 1.0 : cityMultiplier(cityKey);
 
     const depositPct = ov.depositPct != null ? ov.depositPct : DATA.assumptions.depositPercentage;
@@ -157,7 +157,20 @@ const Model = (() => {
     const nom = ov.nom != null ? ov.nom : DATA.migration.netOverseasMigration.current;
     const householdSize = ov.householdSize != null ? ov.householdSize : DATA.migration.housingDemand.averageHouseholdSize;
 
-    // --- Price impact: central ---
+    // --- Migration price pressure ---
+    // Adjusts baseline price based on NOM deviation from current observed level.
+    // Elasticity: 1% population change → ~1% price change (conservative central;
+    // 2SLS estimates 1.16-1.59%, Tran & Faff 2023, Nature).
+    const mig = DATA.migration;
+    const baselineNom = mig.netOverseasMigration.current;
+    const baselinePop = mig.priceElasticity.baselinePopulation;
+    const migElasticity = mig.priceElasticity.central;
+    const nomDeviation = nom - baselineNom;
+    const popChangePct = (nomDeviation / baselinePop) * 100;
+    const migPriceAdjustPct = popChangePct * migElasticity;
+    const basePrice = Math.round(observedPrice * (1 + migPriceAdjustPct / 100));
+
+    // --- CGT price impact: central ---
     let centralPct = interpolate(cgtDiscount, CGT_PRICE_ANCHORS, 'pricePct') * multiplier;
     let lowPct = interpolate(cgtDiscount, CGT_PRICE_LOW, 'pricePct') * multiplier;
     let highPct = interpolate(cgtDiscount, CGT_PRICE_HIGH, 'pricePct') * multiplier;
@@ -171,8 +184,8 @@ const Model = (() => {
     }
 
     const newPrice = basePrice * (1 + centralPct / 100);
-    const newPriceLow = basePrice * (1 + highPct / 100); // high impact = lower price
-    const newPriceHigh = basePrice * (1 + lowPct / 100); // low impact = higher price
+    const newPriceLow = basePrice * (1 + highPct / 100);
+    const newPriceHigh = basePrice * (1 + lowPct / 100);
     const priceDifference = newPrice - basePrice;
 
     // --- Deposit calculations ---
@@ -242,7 +255,6 @@ const Model = (() => {
     const rentImpactWeekly = Math.round(discountReduction * RENT_RATE_PER_PP * 100) / 100;
 
     // --- Migration context (dynamic based on user-adjusted NOM and household size) ---
-    const mig = DATA.migration;
     const migrationDwellingDemand = Math.round(nom / householdSize);
     const baseMigDemand = Math.round(
       mig.netOverseasMigration.current / mig.housingDemand.averageHouseholdSize
@@ -277,7 +289,9 @@ const Model = (() => {
 
     return {
       cityLabel: city.label,
+      observedPrice,
       basePrice,
+      migPriceAdjustPct: Math.round(migPriceAdjustPct * 100) / 100,
       newPrice: Math.round(newPrice),
       newPriceLow: Math.round(newPriceLow),
       newPriceHigh: Math.round(newPriceHigh),

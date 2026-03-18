@@ -44,7 +44,10 @@ const UI = (() => {
     }
 
     document.getElementById('metricNewPrice').textContent = formatCurrency(result.newPrice);
-    document.getElementById('metricBasePrice').textContent = 'from ' + formatCurrency(result.basePrice);
+    const basePriceNote = result.migPriceAdjustPct !== 0
+      ? `from ${formatCurrency(result.basePrice)} (observed ${formatCurrency(result.observedPrice)}, migration ${result.migPriceAdjustPct > 0 ? '+' : ''}${result.migPriceAdjustPct.toFixed(1)}%)`
+      : 'from ' + formatCurrency(result.basePrice);
+    document.getElementById('metricBasePrice').textContent = basePriceNote;
 
     // Deposit + stamp duty
     document.getElementById('metricDepositSaving').textContent =
@@ -117,7 +120,23 @@ const UI = (() => {
     document.getElementById('metricRent').className =
       'metric-value ' + (result.rentImpactWeekly > 0 ? 'negative' : '');
 
-    // Migration context
+    // Migration price effect
+    const migPriceEl = document.getElementById('metricMigPrice');
+    if (migPriceEl) {
+      migPriceEl.textContent = result.migPriceAdjustPct === 0
+        ? '0%'
+        : (result.migPriceAdjustPct > 0 ? '+' : '') + result.migPriceAdjustPct.toFixed(1) + '%';
+      migPriceEl.className = 'metric-value ' +
+        (result.migPriceAdjustPct > 0 ? 'negative' : result.migPriceAdjustPct < 0 ? 'positive' : '');
+    }
+    const migPriceSub = document.getElementById('metricMigPriceSub');
+    if (migPriceSub) {
+      migPriceSub.textContent = result.migPriceAdjustPct === 0
+        ? 'NOM at baseline (306K) — no price adjustment'
+        : `NOM ${(result.nom / 1000).toFixed(0)}K ${result.migPriceAdjustPct > 0 ? 'raises' : 'lowers'} baseline by ${formatCurrency(Math.abs(result.basePrice - result.observedPrice))}`;
+    }
+
+    // Migration demand
     document.getElementById('metricMigDemand').textContent =
       result.migrationDwellingDemand.toLocaleString() + '/yr';
     const migSub = document.getElementById('metricMigDemandSub');
@@ -125,10 +144,15 @@ const UI = (() => {
       migSub.textContent = `NOM ${(result.nom / 1000).toFixed(0)}K \u00F7 ${result.householdSize.toFixed(1)} ppd`;
     }
 
+    // Supply gap
     document.getElementById('metricSupplyGap').textContent =
       result.existingGap.toLocaleString() + '/yr';
     document.getElementById('metricSupplyGap').className =
       'metric-value ' + (result.existingGap > 0 ? 'negative' : 'positive');
+    const gapSub = document.getElementById('metricSupplyGapSub');
+    if (gapSub) {
+      gapSub.textContent = `Demand ${result.totalDwellingDemand.toLocaleString()}/yr - construction ${result.currentConstruction.toLocaleString()}/yr`;
+    }
 
     document.getElementById('metricCgtVsGap').textContent =
       result.existingGap > 0 ? result.constructionAsPctOfGap.toFixed(1) + '%' : 'N/A';
@@ -168,22 +192,29 @@ const UI = (() => {
     const savLabel = formatCurrency(r.annualSavingsUsed);
     const nomLabel = (r.nom / 1000).toFixed(0) + 'K';
 
+    const migNote = r.migPriceAdjustPct !== 0
+      ? ` At NOM ${nomLabel} (vs baseline 306K), migration pressure ${r.migPriceAdjustPct > 0 ? 'raises' : 'lowers'} ` +
+        `the baseline from ${formatCurrency(r.observedPrice)} to ${formatCurrency(r.basePrice)} ` +
+        `(${r.migPriceAdjustPct > 0 ? '+' : ''}${r.migPriceAdjustPct.toFixed(1)}%).`
+      : '';
+
     const stampInfo = r.stampDutyNew.fhb > 0
       ? ` Stamp duty for a first home buyer would be ${formatCurrency(r.stampDutyNew.fhb)}, ` +
         `bringing total upfront costs to ${formatCurrency(r.totalUpfrontNew)}.`
       : ` First home buyers are exempt from stamp duty at this price in this state.`;
 
+    const gapNote = ` At NOM ${nomLabel}, migration drives demand for ~${r.migrationDwellingDemand.toLocaleString()} ` +
+      `dwellings/year (total demand ~${r.totalDwellingDemand.toLocaleString()}/yr vs ` +
+      `~${r.currentConstruction.toLocaleString()}/yr construction = ` +
+      `${r.existingGap > 0 ? '~' + r.existingGap.toLocaleString() + '/yr gap' : 'surplus'}).`;
+
     if (r.cgtDiscount === 50 && r.ngEnabled) {
       return `<strong>Current policy:</strong> 50% CGT discount with negative gearing. ` +
-        `The mean dwelling price in ${r.cityLabel} is ${formatCurrency(r.basePrice)}. ` +
+        `The mean dwelling price in ${r.cityLabel} is ${formatCurrency(r.basePrice)}.${migNote} ` +
         `A ${depPctLabel} deposit requires ${formatCurrency(r.currentDeposit)}, taking approximately ` +
         `${r.currentYearsToSave} years to save at ${savLabel}/year.${stampInfo} ` +
         `Monthly mortgage repayments at ${(r.interestRate * 100).toFixed(1)}% would be ` +
-        `${formatCurrency(r.baseMonthlyPayment)}. ` +
-        `At NOM ${nomLabel}, migration drives demand for ~${r.migrationDwellingDemand.toLocaleString()} ` +
-        `dwellings/year (total demand ~${r.totalDwellingDemand.toLocaleString()}/yr vs ` +
-        `~${r.currentConstruction.toLocaleString()}/yr construction = ` +
-        `~${r.existingGap.toLocaleString()}/yr gap).`;
+        `${formatCurrency(r.baseMonthlyPayment)}.${gapNote}`;
     }
 
     const parts = [];
@@ -195,16 +226,17 @@ const UI = (() => {
     if (r.constructionImpactAnnual !== 0) {
       supplyNote = ` The Grattan Institute estimates this could reduce new construction by approximately ` +
         `${Math.abs(r.constructionImpactAnnual).toLocaleString()} homes/year, with a rent impact of ` +
-        `approximately $${r.rentImpactWeekly.toFixed(2)}/week. At NOM ${nomLabel} ` +
-        `(${r.householdSize.toFixed(1)} persons/dwelling), migration drives demand for ` +
-        `~${r.migrationDwellingDemand.toLocaleString()} dwellings/year. The total supply gap is ` +
-        `~${r.existingGap.toLocaleString()}/year — the CGT reform's construction impact ` +
-        `represents just ${r.constructionAsPctOfGap.toFixed(1)}% of this gap.`;
+        `approximately $${r.rentImpactWeekly.toFixed(2)}/week.` +
+        (r.existingGap > 0
+          ? ` The total supply gap is ~${r.existingGap.toLocaleString()}/year — the CGT reform's ` +
+            `construction impact represents just ${r.constructionAsPctOfGap.toFixed(1)}% of this gap.`
+          : '');
     }
 
-    return `<strong>Modelled scenario:</strong> ${reforms} would reduce ${r.cityLabel} ` +
+    return `<strong>Modelled scenario:</strong> ${reforms}${migNote} would reduce ${r.cityLabel} ` +
       `dwelling prices by an estimated ${Math.abs(r.priceChangePct).toFixed(2)}% ` +
-      `<span class="range-note">(range: ${r.priceChangePctHigh.toFixed(1)}% to ${r.priceChangePctLow.toFixed(1)}%)</span>, ` +
+      `<span class="range-note">(range: ${r.priceChangePctHigh.toFixed(1)}% to ${r.priceChangePctLow.toFixed(1)}%)</span> ` +
+      `from the ${r.migPriceAdjustPct !== 0 ? 'migration-adjusted' : ''} baseline of ${formatCurrency(r.basePrice)}, ` +
       `saving first home buyers ${formatCurrency(Math.abs(r.depositSaving))} on a ${depPctLabel} deposit ` +
       `and ${Math.abs(r.yearsSaved).toFixed(1)} years of saving time.${stampInfo} ` +
       `The first home buyer share of new lending would increase by an estimated ` +

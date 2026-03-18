@@ -182,14 +182,19 @@
       <div class="metric-sub">Estimated change in median weekly rent</div>
     </div>
     <div class="metric-card">
+      <div class="metric-label">Migration Price Effect</div>
+      <div class="metric-value" id="metricMigPrice">0%</div>
+      <div class="metric-sub" id="metricMigPriceSub">Baseline price adjustment from NOM change</div>
+    </div>
+    <div class="metric-card">
       <div class="metric-label">Migration Dwelling Demand</div>
       <div class="metric-value" id="metricMigDemand">0/yr</div>
       <div class="metric-sub" id="metricMigDemandSub">NOM 306K &divide; 2.5 ppd</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Existing Supply Gap <span class="vintage-badge">NHSAC 2025</span></div>
+      <div class="metric-label">Existing Supply Gap</div>
       <div class="metric-value" id="metricSupplyGap">0/yr</div>
-      <div class="metric-sub">Demand (223K) minus construction (177K)</div>
+      <div class="metric-sub" id="metricSupplyGapSub">Demand minus construction (177K/yr)</div>
     </div>
   </section>
 
@@ -350,31 +355,56 @@
         </tbody>
       </table>
 
-      <h4>Key Assumptions</h4>
+      <h4>Key Assumptions (adjustable via sliders)</h4>
       <ul>
         <li>Typical investor marginal tax rate: 39%</li>
         <li>Average holding period: 7 years</li>
         <li>Average annual capital growth: 6.5%</li>
-        <li>Deposit percentage: 20%</li>
-        <li>Annual household savings rate: $40,000</li>
+        <li><strong>Deposit percentage: 20% (adjustable 5%-30%)</strong></li>
+        <li><strong>Annual household savings: $40,000 (adjustable $10K-$100K)</strong></li>
         <li>Median household income: $105,000</li>
-        <li>Default mortgage rate: 6.0% (adjustable via slider)</li>
+        <li><strong>Default mortgage rate: 6.0% (adjustable 3.5%-8.5%)</strong></li>
         <li>Loan term: 30 years</li>
         <li>Serviceability threshold: 30% of gross income</li>
+        <li><strong>Net overseas migration: 306,000 (adjustable 0-500K)</strong></li>
+        <li><strong>Persons per dwelling: 2.5 (adjustable 2.0-3.0)</strong></li>
       </ul>
 
-      <h4>Migration and Population Context</h4>
+      <h4>Migration Price Effect Model</h4>
       <p>
-        <strong>v2.1 addition:</strong> The model now contextualises the CGT reform's supply-side impact against
-        migration-driven housing demand. Net overseas migration (NOM) was 306,000 in 2024-25 (ABS), driving demand
-        for approximately 122,400 dwellings/year (at 2.5 persons per dwelling). The total annual dwelling demand is
-        approximately 223,000 (NHSAC 2025), while actual construction delivered approximately 177,000 homes in 2024,
-        creating an existing supply gap of ~46,000 dwellings/year.
+        The model dynamically adjusts baseline dwelling prices based on changes in net overseas migration (NOM).
+        When NOM differs from the observed baseline of 306,000 (ABS 2024-25), prices are adjusted using a
+        population-to-price elasticity derived from peer-reviewed research.
       </p>
       <p>
-        The CGT reform's estimated construction reduction (~2,000 homes/year at 25% discount) represents approximately
-        4.3% of this existing gap. This context shows that while the reform has a modest negative supply effect, it is
-        small relative to the structural supply shortage driven primarily by migration and construction capacity constraints.
+        <strong>Elasticity calibration:</strong> Tran &amp; Faff (2023) used two-stage least squares (2SLS) with
+        a climate-visa instrumental variable on Australian panel data and found that a 1% increase in city population
+        leads to a 1.16%&ndash;1.59% increase in home prices.
+        <a class="source-link" href="https://www.nature.com/articles/s42949-023-00136-7">Nature (2023)</a>.
+        OECD cross-country analysis (Gevorgyan) found ~1.4pp price growth per 1pp population growth.
+        The model uses a <strong>conservative central elasticity of 1.0</strong> (below the 2SLS range), meaning
+        a 1% change in population translates to a 1% change in dwelling prices.
+      </p>
+      <p>
+        <strong>Calculation:</strong><br>
+        <code>NOM deviation = user NOM &minus; 306,000</code><br>
+        <code>Population change % = NOM deviation / 27,000,000 &times; 100</code><br>
+        <code>Price adjustment % = Population change % &times; elasticity (1.0)</code><br>
+        <code>Adjusted baseline = observed price &times; (1 + price adjustment %)</code>
+      </p>
+      <p>
+        All downstream calculations (CGT reform price impact, deposit, stamp duty, mortgage) then operate on
+        the migration-adjusted baseline rather than the observed price. This allows users to model scenarios like
+        &ldquo;what if NOM was halved?&rdquo; and see both the direct migration price effect and the CGT reform
+        effect on top of it.
+      </p>
+
+      <h4>Migration and Supply Context</h4>
+      <p>
+        The model dynamically calculates migration-driven housing demand and the supply gap based on user-adjustable
+        NOM and persons-per-dwelling parameters. At baseline (NOM 306K, 2.5 ppd), migration drives demand for ~122,400
+        dwellings/year. Total annual dwelling demand is ~223,000 (NHSAC 2025), while construction delivers ~177,000/year,
+        creating a ~46,000/year supply gap. These figures update in real time as users adjust migration levels.
       </p>
       <p>
         State-level migration-induced shortfalls (IPA, 2022-2024): WA 52,783; QLD 48,737; NSW 44,533; VIC 32,244;
@@ -522,14 +552,16 @@
         <tbody>
           <tr><td>Net overseas migration (2024-25)</td><td class="num">306,000</td><td><a class="source-link" href="https://www.abs.gov.au/statistics/people/population/overseas-migration/2024-25" target="_blank" rel="noopener">ABS</a></td></tr>
           <tr><td>Average household size</td><td class="num">~2.5 persons</td><td><a class="source-link" href="https://abs.gov.au/statistics/people/population/household-and-family-projections-australia/latest-release" target="_blank" rel="noopener">ABS</a></td></tr>
-          <tr><td>Migration dwelling demand</td><td class="num">~122,400/yr</td><td>Derived: 306K / 2.5</td></tr>
+          <tr><td>Migration dwelling demand</td><td class="num">~122,400/yr</td><td>Derived: NOM / household size (adjustable)</td></tr>
           <tr><td>Total annual dwelling demand</td><td class="num">~223,000</td><td><a class="source-link" href="https://nhsac.gov.au/index.php/news/release-state-housing-system-report-2025" target="_blank" rel="noopener">NHSAC 2025</a></td></tr>
           <tr><td>Actual construction (2024)</td><td class="num">~177,000</td><td>NHSAC 2025</td></tr>
-          <tr><td>Annual supply gap</td><td class="num">~46,000</td><td>Demand minus construction</td></tr>
+          <tr><td>Annual supply gap</td><td class="num">~46,000</td><td>Demand minus construction (dynamic)</td></tr>
           <tr><td>Cumulative shortfall (2022-24)</td><td class="num">179,287</td><td><a class="source-link" href="https://ipa.org.au/publications-ipa/research-note/analysis-of-migration-induced-housing-shortfall-since-2022" target="_blank" rel="noopener">IPA</a></td></tr>
           <tr><td>Housing Accord target</td><td class="num">1.2M (5yr)</td><td><a class="source-link" href="https://treasury.gov.au/housing-policy/accord" target="_blank" rel="noopener">Treasury</a></td></tr>
           <tr><td>Expected delivery</td><td class="num">938,000</td><td>NHSAC forecast</td></tr>
           <tr><td>Accord shortfall</td><td class="num">262,000</td><td>NHSAC 2025</td></tr>
+          <tr><td>Migration-price elasticity</td><td class="num">1.0 (0.5&ndash;1.5)</td><td><a class="source-link" href="https://www.nature.com/articles/s42949-023-00136-7" target="_blank" rel="noopener">Tran &amp; Faff (2023), Nature</a></td></tr>
+          <tr><td>Baseline population</td><td class="num">27,000,000</td><td><a class="source-link" href="https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population/jun-2025" target="_blank" rel="noopener">ABS Population</a></td></tr>
         </tbody>
       </table>
       <p>
