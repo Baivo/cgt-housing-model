@@ -65,8 +65,8 @@
       <div class="control-group">
         <label for="rateSlider">Mortgage Rate</label>
         <div class="slider-container">
-          <input type="range" id="rateSlider" min="3.5" max="8.5" step="0.1" value="6.0">
-          <span class="slider-value" id="rateSliderValue">6.0%</span>
+          <input type="range" id="rateSlider" min="3.5" max="8.5" step="0.1" value="6.4">
+          <span class="slider-value" id="rateSliderValue">6.4%</span>
         </div>
       </div>
     </div>
@@ -405,8 +405,8 @@
       <p>
         Users can vary the mortgage interest rate (3.5% to 8.5%) to see how
         rate changes interact with price changes. Monthly mortgage payments and income needed for serviceability
-        (at 30% of income) update in real time. The RBA cash rate is 3.85% as of February 2026, with typical
-        variable mortgage rates around 6.0-6.5%.
+        (at 30% of income) update in real time. The RBA cash rate was raised to 4.10% on 17 March 2026
+        (second consecutive 25bp hike), with typical variable mortgage rates around 6.3-6.7%.
       </p>
 
       <h4>Supply-Side Impact</h4>
@@ -467,11 +467,11 @@
       <h4>Key Assumptions (adjustable via sliders)</h4>
       <ul>
         <li>Typical investor marginal tax rate: 39%</li>
-        <li>Average holding period: 7 years</li>
+        <li>Average holding period: 9 years (NSW Treasury median 8.8yr)</li>
         <li><strong>Deposit percentage: 20% (adjustable 5%-30%)</strong></li>
         <li><strong>Annual household savings: $40,000 (adjustable $10K-$100K)</strong></li>
         <li>Median household income: $105,000</li>
-        <li><strong>Default mortgage rate: 6.0% (adjustable 3.5%-8.5%)</strong></li>
+        <li><strong>Default mortgage rate: 6.4% (adjustable 3.5%-8.5%)</strong></li>
         <li>Loan term: 30 years</li>
         <li>Serviceability threshold: 30% of gross income</li>
         <li><strong>Net overseas migration: 306,000 (adjustable 0-500K)</strong></li>
@@ -496,7 +496,7 @@
       </p>
       <p>
         <code>Cumulative pop. change = (NOM &minus; 306K) &times; 5 years</code><br>
-        <code>Demand price effect = (cumulative change / 27M) &times; elasticity</code>
+        <code>Demand price effect = (cumulative change / 27.4M) &times; elasticity</code>
       </p>
 
       <p><strong>Channel 2 &mdash; Supply gap scarcity:</strong>
@@ -511,9 +511,9 @@
       </p>
 
       <p><strong>Combined effect:</strong> The two channels are additive.
-        For example, reducing NOM from 306K to 0 over 5 years produces a demand effect of &minus;5.7%
+        For example, reducing NOM from 306K to 0 over 5 years produces a demand effect of &minus;5.6%
         plus a supply gap effect of &minus;2.7% (the gap turns into a surplus), for a total of &minus;8.3%
-        (&sim;$90K nationally). Returning to peak NOM of 500K produces +3.6% demand + +1.7% scarcity = +5.3%.
+        (&sim;$89K nationally). Returning to peak NOM of 500K produces +3.5% demand + +1.7% scarcity = +5.2%.
       </p>
       <p>
         All downstream calculations (CGT reform price impact, deposit, stamp duty, mortgage) then operate on
@@ -646,8 +646,8 @@
         <tbody>
           <tr><td>NSW</td><td>Exempt up to $800K</td><td>Concession $800K-$1M</td></tr>
           <tr><td>VIC</td><td>Exempt up to $600K</td><td>Concession $600K-$750K</td></tr>
-          <tr><td>QLD</td><td>Concession under $550K</td><td>$30K FHOG for new homes</td></tr>
-          <tr><td>SA</td><td>None</td><td>No FHB stamp duty concessions</td></tr>
+          <tr><td>QLD</td><td>Exempt up to $700K</td><td>Concession $700K-$800K; new builds no cap (from May 2025)</td></tr>
+          <tr><td>SA</td><td>Exempt (new homes only)</td><td>No value cap for new homes (from June 2024); existing homes: no concession</td></tr>
           <tr><td>WA</td><td>Exempt up to $430K</td><td>Concession to $530K</td></tr>
           <tr><td>TAS</td><td>50% discount under $600K</td><td>Must be principal residence</td></tr>
           <tr><td>NT</td><td>Abolished for OO</td><td>Conditions apply</td></tr>
@@ -670,7 +670,7 @@
           <tr><td>Expected delivery</td><td class="num">938,000</td><td>NHSAC forecast</td></tr>
           <tr><td>Accord shortfall</td><td class="num">262,000</td><td>NHSAC 2025</td></tr>
           <tr><td>Migration-price elasticity</td><td class="num">1.0 (0.5&ndash;1.5)</td><td><a class="source-link" href="https://www.nature.com/articles/s42949-023-00136-7" target="_blank" rel="noopener">Tran &amp; Faff (2023), Nature</a></td></tr>
-          <tr><td>Baseline population</td><td class="num">27,000,000</td><td><a class="source-link" href="https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population/jun-2025" target="_blank" rel="noopener">ABS Population</a></td></tr>
+          <tr><td>Baseline population</td><td class="num">27,400,000</td><td><a class="source-link" href="https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population" target="_blank" rel="noopener">ABS Population (Dec 2024)</a></td></tr>
         </tbody>
       </table>
       <p>
@@ -679,11 +679,11 @@
         <a class="source-link" href="https://ipa.org.au/publications-ipa/research-note/analysis-of-migration-induced-housing-shortfall-since-2022" target="_blank" rel="noopener">IPA: Analysis of migration-induced housing shortfall</a>
       </p>
 
-      <h4>Interest Rate Data <span class="vintage-badge">Feb 2026</span></h4>
+      <h4>Interest Rate Data <span class="vintage-badge">Mar 2026</span></h4>
       <p>
-        RBA cash rate: 3.85% (Feb 2026). Typical variable mortgage rates: ~6.0-6.5%.<br>
-        <a class="source-link" href="https://www.rba.gov.au/publications/smp/2026/feb/outlook.html" target="_blank" rel="noopener">
-          RBA Statement on Monetary Policy, Feb 2026
+        RBA cash rate: 4.10% (raised 17 March 2026, second consecutive 25bp hike). Typical variable mortgage rates: ~6.3-6.7%.<br>
+        <a class="source-link" href="https://www.rba.gov.au/media-releases/2026/mr-26-08.html" target="_blank" rel="noopener">
+          RBA Monetary Policy Decision, March 2026
         </a>
       </p>
 

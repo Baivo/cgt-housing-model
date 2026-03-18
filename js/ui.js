@@ -5,7 +5,7 @@ const UI = (() => {
   let currentDiscount = 50;
   let ngEnabled = true;
   let currentCity = 'national';
-  let currentRate = 0.06;
+  let currentRate = 0.064;
   let currentNom = 306000;
   let currentHouseholdSize = 2.5;
   let currentSavings = 40000;

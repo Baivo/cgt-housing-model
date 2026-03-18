@@ -105,8 +105,9 @@ const DATA = {
           { upTo: 1000000, rate: 0.045, base: 17325 },
           { upTo: Infinity, rate: 0.0575, base: 38025 }
         ],
-        fhbConcessionalUpTo: 550000,
-        fhbNote: "Concession for homes under $550K; $30K First Home Owner Grant for new homes"
+        fhbExemptUpTo: 700000,
+        fhbConcessionalUpTo: 800000,
+        fhbNote: "Full exemption up to $700K; concession $700K-$800K (from May 2025). New builds: no cap."
       },
       sa: {
         label: "SA",
@@ -121,7 +122,7 @@ const DATA = {
           { upTo: 500000, rate: 0.05, base: 11330 },
           { upTo: Infinity, rate: 0.055, base: 21330 }
         ],
-        fhbNote: "No stamp duty concessions for first home buyers in SA"
+        fhbNote: "New homes: stamp duty abolished for FHBs (no value cap, June 2024). Existing homes: no concession. Shown here: existing home rate."
       },
       wa: {
         label: "WA",
@@ -177,12 +178,12 @@ const DATA = {
   },
 
   interestRates: {
-    source: "RBA Statement on Monetary Policy, February 2026",
-    sourceUrl: "https://www.rba.gov.au/publications/smp/2026/feb/outlook.html",
-    vintage: "Feb 2026",
-    cashRate: 3.85,
-    typicalVariableMortgageRate: 6.2,
-    note: "RBA cash rate 3.85% as of Feb 2026. Typical variable mortgage rates ~6.0-6.5%."
+    source: "RBA Monetary Policy Decision, March 2026",
+    sourceUrl: "https://www.rba.gov.au/media-releases/2026/mr-26-08.html",
+    vintage: "Mar 2026",
+    cashRate: 4.10,
+    typicalVariableMortgageRate: 6.35,
+    note: "RBA cash rate raised to 4.10% on 17 March 2026 (second consecutive 25bp hike). Typical variable mortgage rates ~6.3-6.7%."
   },
 
   cgtPolicy: {
@@ -264,7 +265,7 @@ const DATA = {
       source: "Derived from 2SLS estimates (1.16-1.59%) in Tran & Faff (2023); OLS estimates 0.41-0.46%; OECD cross-country ~1.4pp/pp (Gevorgyan). Central estimate of 1.0 is conservative.",
       sourceUrl: "https://www.nature.com/articles/s42949-023-00136-7",
       note: "Elasticity of home prices w.r.t. city population. 2SLS with climate-visa IV using Australian panel data.",
-      baselinePopulation: 27000000
+      baselinePopulation: 27400000
     },
     populationProjection: {
       population2036: 31500000,
@@ -356,7 +357,7 @@ const DATA = {
     typicalInvestorMarginalRate: 0.39,
     depositPercentage: 0.20,
     annualHouseholdSavings: 40000,
-    averageHoldingPeriodYears: 7,
+    averageHoldingPeriodYears: 9,
     averageAnnualCapitalGrowthPct: 6.5,
     medianHouseholdIncome: 105000,
     nominalIncomeGrowthPct: 3.0,
