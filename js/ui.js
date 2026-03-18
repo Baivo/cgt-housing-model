@@ -219,31 +219,37 @@ const UI = (() => {
   }
 
   function updateAll() {
-    const ov = getOverrides();
-    const result = Model.compute(currentDiscount, ngEnabled, currentCity, currentRate, ov);
-    const allCities = Model.computeAllCities(currentDiscount, ngEnabled, currentRate, ov);
-    const sweepCurrent = Model.computeSweep(ngEnabled, currentCity, 5, currentRate, ov);
-    const sweepNG = Model.computeSweep(true, currentCity, 5, currentRate, ov);
-    const sweepNoNG = Model.computeSweep(false, currentCity, 5, currentRate, ov);
-    const proj = Model.computeProjection(currentDiscount, ngEnabled, currentCity, currentRate, ov);
+    try {
+      const ov = getOverrides();
+      const result = Model.compute(currentDiscount, ngEnabled, currentCity, currentRate, ov);
+      const allCities = Model.computeAllCities(currentDiscount, ngEnabled, currentRate, ov);
+      const sweepCurrent = Model.computeSweep(ngEnabled, currentCity, 5, currentRate, ov);
+      const sweepNG = Model.computeSweep(true, currentCity, 5, currentRate, ov);
+      const sweepNoNG = Model.computeSweep(false, currentCity, 5, currentRate, ov);
+      const proj = Model.computeProjection(currentDiscount, ngEnabled, currentCity, currentRate, ov);
 
-    updateMetricCards(result);
-    updateProjectionMetrics(proj);
+      updateMetricCards(result);
+      updateProjectionMetrics(proj);
 
-    Charts.updateTrajectoryChart(proj);
-    Charts.updateDepositRaceChart(proj);
-    Charts.updateStockChart(proj);
-    Charts.updatePriceChart(allCities);
-    Charts.updateAffordChart(sweepCurrent);
-    Charts.updateShareChart(sweepCurrent);
-    Charts.updateRevenueChart(sweepNG, sweepNoNG);
-    Charts.updateSupplyChart(sweepCurrent);
+      Charts.updateTrajectoryChart(proj);
+      Charts.updateDepositRaceChart(proj);
+      Charts.updateStockChart(proj);
+      Charts.updatePriceChart(allCities);
+      Charts.updateAffordChart(sweepCurrent);
+      Charts.updateShareChart(sweepCurrent);
+      Charts.updateRevenueChart(sweepNG, sweepNoNG);
+      Charts.updateSupplyChart(sweepCurrent);
 
-    document.getElementById('cityLabel').textContent = result.cityLabel;
-    document.getElementById('scenarioSummary').innerHTML = buildSummary(result, proj);
+      document.getElementById('cityLabel').textContent = result.cityLabel;
+      document.getElementById('scenarioSummary').innerHTML = buildSummary(result, proj);
 
-    const ngLabel = document.querySelector('.toggle-label');
-    ngLabel.textContent = ngEnabled ? 'Enabled (current policy)' : 'Disabled';
+      const ngLabel = document.querySelector('.toggle-label');
+      ngLabel.textContent = ngEnabled ? 'Enabled (current policy)' : 'Disabled';
+    } catch (e) {
+      console.error('Model update error:', e);
+      const summary = document.getElementById('scenarioSummary');
+      if (summary) summary.innerHTML = '<strong>Error:</strong> ' + e.message + ' — please try a hard refresh (Ctrl+Shift+R).';
+    }
   }
 
   function buildSummary(r, proj) {
