@@ -289,7 +289,7 @@ const UI = (() => {
       projNote += ` With reform you could buy by ${proj.buyYearWithReform}; without reform the deposit is out of reach within the horizon.`;
     }
 
-    return `<strong>Modelled scenario:</strong> ${reforms}${migNote}${projNote}` +
+    return `<strong>Modelled scenario:</strong> ${reforms} (derived price growth: ${proj.derivedGrowthPct.toFixed(1)}% p.a.).${migNote}${projNote}` +
       ` The price-to-income ratio would be ${lastWR.priceToIncome.toFixed(1)}x with reform vs ${lastNR.priceToIncome.toFixed(1)}x without.`;
   }
 
