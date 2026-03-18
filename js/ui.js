@@ -118,7 +118,7 @@ const UI = (() => {
     document.getElementById('metricRent').className =
       'metric-value ' + (result.rentImpactWeekly > 0 ? 'negative' : '');
 
-    // Migration price effect
+    // Migration price effect (two channels)
     const migPriceEl = document.getElementById('metricMigPrice');
     if (migPriceEl) {
       migPriceEl.textContent = result.migPriceAdjustPct === 0
@@ -129,9 +129,15 @@ const UI = (() => {
     }
     const migPriceSub = document.getElementById('metricMigPriceSub');
     if (migPriceSub) {
-      migPriceSub.textContent = result.migPriceAdjustPct === 0
-        ? 'NOM at baseline (306K) — no price adjustment'
-        : `NOM ${(result.nom / 1000).toFixed(0)}K ${result.migPriceAdjustPct > 0 ? 'raises' : 'lowers'} baseline by ${formatCurrency(Math.abs(result.basePrice - result.observedPrice))}`;
+      if (result.migPriceAdjustPct === 0) {
+        migPriceSub.textContent = 'NOM at baseline (306K) — no price adjustment';
+      } else {
+        const sign = v => v > 0 ? '+' : '';
+        migPriceSub.textContent =
+          `Demand ${sign(result.migDemandPricePct)}${result.migDemandPricePct.toFixed(1)}% + ` +
+          `supply gap ${sign(result.migGapPricePct)}${result.migGapPricePct.toFixed(1)}% = ` +
+          `${formatCurrency(Math.abs(result.basePrice - result.observedPrice))} ${result.migPriceAdjustPct > 0 ? 'higher' : 'lower'}`;
+      }
     }
 
     // Migration demand

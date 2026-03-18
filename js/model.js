@@ -149,21 +149,45 @@ const Model = (() => {
     const nom = ov.nom != null ? ov.nom : DATA.migration.netOverseasMigration.current;
     const householdSize = ov.householdSize != null ? ov.householdSize : DATA.migration.housingDemand.averageHouseholdSize;
 
-    // --- Migration price pressure (cumulative over policy horizon) ---
-    // NOM is a flow; housing prices respond to cumulative population stock changes.
-    // A sustained NOM change over HORIZON_YEARS produces a cumulative population
-    // deviation that shifts prices via the population-price elasticity.
-    // Elasticity: 1% population change → ~1% price change (conservative central;
-    // 2SLS estimates 1.16-1.59%, Tran & Faff 2023, Nature).
+    // --- Migration price pressure (two channels, cumulative over policy horizon) ---
+    // NOM is a flow; housing prices respond to the cumulative population stock
+    // that builds up over HORIZON_YEARS through two reinforcing channels:
+    //
+    // Channel 1 — DEMAND PRESSURE: More people competing for housing bids up prices.
+    //   Calibrated to Tran & Faff (2023): 1% population → 1% prices (central).
+    //
+    // Channel 2 — SUPPLY GAP SCARCITY: When dwelling demand persistently exceeds
+    //   construction, the cumulative unmet demand as a fraction of total housing stock
+    //   creates additional scarcity pressure. Coefficient 0.5 (conservative, accounts
+    //   for partial overlap with the demand elasticity which already implicitly
+    //   includes average supply conditions).
     const HORIZON_YEARS = 5;
+    const SUPPLY_GAP_COEFF = 0.5;
     const mig = DATA.migration;
     const baselineNom = mig.netOverseasMigration.current;
     const baselinePop = mig.priceElasticity.baselinePopulation;
     const migElasticity = mig.priceElasticity.central;
+    const totalStock = DATA.dwellingPrices.data.national.dwellings;
+
+    // Channel 1: population demand
     const nomDeviation = nom - baselineNom;
     const cumulativePopChange = nomDeviation * HORIZON_YEARS;
     const popChangePct = (cumulativePopChange / baselinePop) * 100;
-    const migPriceAdjustPct = popChangePct * migElasticity;
+    const demandPricePct = popChangePct * migElasticity;
+
+    // Channel 2: supply gap scarcity
+    const baselineMigDemand = baselineNom / mig.housingDemand.averageHouseholdSize;
+    const userMigDemand = nom / householdSize;
+    const nonMigDemand = mig.housingDemand.totalAnnualDwellingDemand - baselineMigDemand;
+    const baselineGap = mig.housingDemand.totalAnnualDwellingDemand
+                      - mig.housingShortfall.annualConstruction2024;
+    const userTotalDemand = nonMigDemand + userMigDemand;
+    const userGap = userTotalDemand - mig.housingShortfall.annualConstruction2024;
+    const gapDeviation = userGap - baselineGap;
+    const cumulativeGapChange = gapDeviation * HORIZON_YEARS;
+    const gapPricePct = (cumulativeGapChange / totalStock) * 100 * SUPPLY_GAP_COEFF;
+
+    const migPriceAdjustPct = demandPricePct + gapPricePct;
     const basePrice = Math.round(observedPrice * (1 + migPriceAdjustPct / 100));
 
     // --- CGT price impact: central ---
@@ -288,6 +312,8 @@ const Model = (() => {
       observedPrice,
       basePrice,
       migPriceAdjustPct: Math.round(migPriceAdjustPct * 100) / 100,
+      migDemandPricePct: Math.round(demandPricePct * 100) / 100,
+      migGapPricePct: Math.round(gapPricePct * 100) / 100,
       newPrice: Math.round(newPrice),
       newPriceLow: Math.round(newPriceLow),
       newPriceHigh: Math.round(newPriceHigh),

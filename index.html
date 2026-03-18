@@ -371,31 +371,37 @@
 
       <h4>Migration Price Effect Model</h4>
       <p>
-        The model adjusts baseline dwelling prices based on sustained changes to net overseas migration (NOM).
-        Migration is a flow (people/year), but housing prices respond to the <strong>cumulative population stock</strong>
-        that builds up over time. A sustained change in NOM over a 5-year policy horizon produces a meaningful
-        population deviation that shifts prices.
+        The model adjusts baseline dwelling prices based on sustained changes to net overseas migration (NOM)
+        through <strong>two reinforcing channels</strong>, both calculated over a 5-year policy horizon:
+      </p>
+
+      <p><strong>Channel 1 &mdash; Demand pressure:</strong>
+        More people competing for housing directly bids up prices.
+        Calibrated to Tran &amp; Faff (2023), who used 2SLS with a climate-visa instrumental variable on Australian
+        panel data and found a 1% increase in city population leads to a 1.16%&ndash;1.59% increase in home prices
+        (<a class="source-link" href="https://www.nature.com/articles/s42949-023-00136-7">Nature, 2023</a>).
+        The model uses a conservative central elasticity of 1.0.
       </p>
       <p>
-        <strong>Elasticity calibration:</strong> Tran &amp; Faff (2023) used two-stage least squares (2SLS) with
-        a climate-visa instrumental variable on Australian panel data and found that a 1% increase in city population
-        leads to a 1.16%&ndash;1.59% increase in home prices.
-        <a class="source-link" href="https://www.nature.com/articles/s42949-023-00136-7">Nature (2023)</a>.
-        OECD cross-country analysis (Gevorgyan) found ~1.4pp price growth per 1pp population growth.
-        The model uses a <strong>conservative central elasticity of 1.0</strong> (below the 2SLS range).
+        <code>Cumulative pop. change = (NOM &minus; 306K) &times; 5 years</code><br>
+        <code>Demand price effect = (cumulative change / 27M) &times; elasticity</code>
+      </p>
+
+      <p><strong>Channel 2 &mdash; Supply gap scarcity:</strong>
+        When dwelling demand persistently exceeds construction capacity, the cumulative unmet demand as a
+        fraction of total housing stock creates additional scarcity pressure. A coefficient of 0.5 is used
+        (conservative, to account for partial overlap with Channel 1 which already implicitly reflects
+        average supply conditions in its estimated elasticity).
       </p>
       <p>
-        <strong>Calculation:</strong><br>
-        <code>NOM deviation = user NOM &minus; 306,000</code><br>
-        <code>Cumulative pop. change = NOM deviation &times; 5 years</code><br>
-        <code>Population change % = cumulative change / 27,000,000 &times; 100</code><br>
-        <code>Price adjustment % = population change % &times; elasticity (1.0)</code><br>
-        <code>Adjusted baseline = observed price &times; (1 + price adjustment %)</code>
+        <code>Gap change = (new annual gap &minus; baseline 46K gap) &times; 5 years</code><br>
+        <code>Gap price effect = (cumulative gap change / 11.45M dwellings) &times; 0.5</code>
       </p>
-      <p>
-        <strong>Example:</strong> Reducing NOM from 306K to 150K for 5 years means 780,000 fewer people cumulatively,
-        a 2.9% population reduction, producing a ~2.9% price reduction (~$31K nationally). Conversely, returning to
-        peak NOM of 500K would add 970,000 extra people over 5 years, lifting prices ~3.6%.
+
+      <p><strong>Combined effect:</strong> The two channels are additive.
+        For example, reducing NOM from 306K to 0 over 5 years produces a demand effect of &minus;5.7%
+        plus a supply gap effect of &minus;2.7% (the gap turns into a surplus), for a total of &minus;8.3%
+        (&sim;$90K nationally). Returning to peak NOM of 500K produces +3.6% demand + +1.7% scarcity = +5.3%.
       </p>
       <p>
         All downstream calculations (CGT reform price impact, deposit, stamp duty, mortgage) then operate on
