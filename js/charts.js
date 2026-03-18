@@ -6,65 +6,60 @@ const Charts = (() => {
   let priceChart, affordChart, shareChart, revenueChart, supplyChart;
   let trajectoryChart, depositRaceChart, stockChart;
 
-  const BLUE = 'rgba(79, 143, 247, 0.9)';
-  const BLUE_LIGHT = 'rgba(79, 143, 247, 0.12)';
-  const RED = 'rgba(248, 113, 113, 0.9)';
-  const RED_LIGHT = 'rgba(248, 113, 113, 0.12)';
-  const GREEN = 'rgba(52, 211, 153, 0.9)';
-  const GREEN_LIGHT = 'rgba(52, 211, 153, 0.12)';
-  const AMBER = 'rgba(251, 191, 36, 0.9)';
-  const AMBER_LIGHT = 'rgba(251, 191, 36, 0.12)';
-  const PURPLE = 'rgba(167, 139, 250, 0.9)';
-  const TEAL = 'rgba(45, 212, 191, 0.9)';
-  const TEAL_LIGHT = 'rgba(45, 212, 191, 0.12)';
-  const GRAY = 'rgba(91, 106, 135, 0.5)';
+  const TEAL = 'rgba(13, 115, 119, 0.85)';
+  const TEAL_LIGHT = 'rgba(13, 115, 119, 0.08)';
+  const GREEN = 'rgba(5, 150, 105, 0.85)';
+  const GREEN_LIGHT = 'rgba(5, 150, 105, 0.08)';
+  const RED = 'rgba(220, 38, 38, 0.8)';
+  const RED_LIGHT = 'rgba(220, 38, 38, 0.06)';
+  const AMBER = 'rgba(217, 119, 6, 0.85)';
+  const AMBER_LIGHT = 'rgba(217, 119, 6, 0.08)';
+  const PURPLE = 'rgba(124, 58, 237, 0.8)';
+  const SLATE = 'rgba(100, 116, 139, 0.5)';
 
-  const TEXT = '#8b99b5';
-  const TEXT_DIM = '#5b6a87';
-  const GRID = 'rgba(38, 51, 84, 0.6)';
-  const FONT_FAMILY = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  const TEXT = '#4b5563';
+  const TEXT_DIM = '#9ca3af';
+  const GRID = 'rgba(0, 0, 0, 0.06)';
+  const FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
   const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 350, easing: 'easeOutQuart' },
-    interaction: {
-      mode: 'index',
-      intersect: false
-    },
+    interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: {
         labels: {
           color: TEXT,
-          font: { size: 11, family: FONT_FAMILY, weight: '500' },
+          font: { size: 11, family: FONT, weight: '500' },
           padding: 14,
           usePointStyle: true,
           pointStyleWidth: 8
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(12, 18, 34, 0.92)',
-        titleColor: '#e8edf5',
-        bodyColor: '#8b99b5',
-        borderColor: 'rgba(38, 51, 84, 0.8)',
+        backgroundColor: '#1f2937',
+        titleColor: '#f9fafb',
+        bodyColor: '#d1d5db',
+        borderColor: '#374151',
         borderWidth: 1,
         padding: 10,
-        cornerRadius: 6,
-        titleFont: { size: 12, family: FONT_FAMILY, weight: '600' },
-        bodyFont: { size: 11, family: FONT_FAMILY },
+        cornerRadius: 5,
+        titleFont: { size: 12, family: FONT, weight: '600' },
+        bodyFont: { size: 11, family: FONT },
         boxPadding: 4
       }
     },
     scales: {
       x: {
-        ticks: { color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } },
-        grid: { color: GRID, lineWidth: 0.5 },
-        border: { color: 'rgba(38, 51, 84, 0.4)' }
+        ticks: { color: TEXT_DIM, font: { size: 10, family: FONT } },
+        grid: { color: GRID },
+        border: { color: '#e5e7eb' }
       },
       y: {
-        ticks: { color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } },
-        grid: { color: GRID, lineWidth: 0.5 },
-        border: { color: 'rgba(38, 51, 84, 0.4)' }
+        ticks: { color: TEXT_DIM, font: { size: 10, family: FONT } },
+        grid: { color: GRID },
+        border: { color: '#e5e7eb' }
       }
     }
   };
@@ -88,10 +83,10 @@ const Charts = (() => {
   }
 
   function axisTitle(text) {
-    return { display: true, text, color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY, weight: '600' } };
+    return { display: true, text, color: TEXT, font: { size: 10, family: FONT, weight: '600' } };
   }
 
-  /* ========== 1. TRAJECTORY CHART — price over time, two scenarios ========== */
+  /* ========== 1. TRAJECTORY CHART ========== */
   function initTrajectoryChart(ctx) {
     trajectoryChart = new Chart(ctx, {
       type: 'line',
@@ -109,7 +104,7 @@ const Charts = (() => {
           x: { title: axisTitle('Year') },
           y: {
             title: axisTitle('Dwelling Price ($)'),
-            ticks: { callback: v => formatDollars(v), color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } }
+            ticks: { callback: v => formatDollars(v), color: TEXT_DIM, font: { size: 10, family: FONT } }
           }
         }
       })
@@ -130,7 +125,9 @@ const Charts = (() => {
         pointRadius: 3,
         pointHoverRadius: 5,
         borderWidth: 2.5,
-        pointBackgroundColor: RED
+        pointBackgroundColor: '#fff',
+        pointBorderColor: RED,
+        pointBorderWidth: 2
       },
       {
         label: 'With Reform',
@@ -142,7 +139,9 @@ const Charts = (() => {
         pointRadius: 3,
         pointHoverRadius: 5,
         borderWidth: 2.5,
-        pointBackgroundColor: GREEN
+        pointBackgroundColor: '#fff',
+        pointBorderColor: GREEN,
+        pointBorderWidth: 2
       },
       {
         label: 'Savings from Reform',
@@ -162,14 +161,14 @@ const Charts = (() => {
       title: axisTitle('Price Saving ($)'),
       position: 'right',
       grid: { drawOnChartArea: false },
-      ticks: { callback: v => formatDollars(v), color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } },
-      border: { color: 'rgba(38, 51, 84, 0.4)' }
+      ticks: { callback: v => formatDollars(v), color: TEXT_DIM, font: { size: 10, family: FONT } },
+      border: { color: '#e5e7eb' }
     };
 
     trajectoryChart.update();
   }
 
-  /* ========== 2. DEPOSIT RACE CHART — savings vs deposit needed ========== */
+  /* ========== 2. DEPOSIT RACE CHART ========== */
   function initDepositRaceChart(ctx) {
     depositRaceChart = new Chart(ctx, {
       type: 'line',
@@ -187,7 +186,7 @@ const Charts = (() => {
           x: { title: axisTitle('Year') },
           y: {
             title: axisTitle('Amount ($)'),
-            ticks: { callback: v => formatDollars(v), color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } }
+            ticks: { callback: v => formatDollars(v), color: TEXT_DIM, font: { size: 10, family: FONT } }
           }
         }
       })
@@ -201,13 +200,15 @@ const Charts = (() => {
       {
         label: 'Your Cumulative Savings',
         data: proj.noReform.years.map(y => y.cumulativeSavings),
-        borderColor: BLUE,
-        backgroundColor: BLUE_LIGHT,
+        borderColor: TEAL,
+        backgroundColor: TEAL_LIGHT,
         fill: true,
         tension: 0.35,
         borderWidth: 2.5,
         pointRadius: 2.5,
-        pointBackgroundColor: BLUE
+        pointBackgroundColor: '#fff',
+        pointBorderColor: TEAL,
+        pointBorderWidth: 2
       },
       {
         label: 'Deposit Needed (No Reform)',
@@ -219,7 +220,9 @@ const Charts = (() => {
         borderWidth: 2,
         borderDash: [6, 3],
         pointRadius: 2.5,
-        pointBackgroundColor: RED
+        pointBackgroundColor: '#fff',
+        pointBorderColor: RED,
+        pointBorderWidth: 2
       },
       {
         label: 'Deposit Needed (With Reform)',
@@ -231,13 +234,15 @@ const Charts = (() => {
         borderWidth: 2,
         borderDash: [6, 3],
         pointRadius: 2.5,
-        pointBackgroundColor: GREEN
+        pointBackgroundColor: '#fff',
+        pointBorderColor: GREEN,
+        pointBorderWidth: 2
       }
     ];
     depositRaceChart.update();
   }
 
-  /* ========== 3. STOCK BALANCE CHART — cumulative gap ========== */
+  /* ========== 3. STOCK BALANCE CHART ========== */
   function initStockChart(ctx) {
     stockChart = new Chart(ctx, {
       type: 'bar',
@@ -265,7 +270,7 @@ const Charts = (() => {
                 return v;
               },
               color: TEXT_DIM,
-              font: { size: 10, family: FONT_FAMILY }
+              font: { size: 10, family: FONT }
             }
           }
         }
@@ -280,24 +285,24 @@ const Charts = (() => {
       {
         label: 'Cumulative Gap (No Reform)',
         data: proj.noReform.years.slice(1).map(y => y.cumulativeGap),
-        backgroundColor: 'rgba(248, 113, 113, 0.5)',
+        backgroundColor: 'rgba(220, 38, 38, 0.35)',
         borderColor: RED,
         borderWidth: 1,
-        borderRadius: 4
+        borderRadius: 3
       },
       {
         label: 'Cumulative Gap (With Reform)',
         data: proj.withReform.years.slice(1).map(y => y.cumulativeGap),
-        backgroundColor: 'rgba(52, 211, 153, 0.5)',
+        backgroundColor: 'rgba(5, 150, 105, 0.35)',
         borderColor: GREEN,
         borderWidth: 1,
-        borderRadius: 4
+        borderRadius: 3
       }
     ];
     stockChart.update();
   }
 
-  /* ========== 4. Price impact by city — horizontal bar with confidence range ========== */
+  /* ========== 4. Price impact by city ========== */
   function initPriceChart(ctx) {
     priceChart = new Chart(ctx, {
       type: 'bar',
@@ -321,7 +326,7 @@ const Charts = (() => {
             ticks: {
               callback: v => (v >= 0 ? '+' : '') + v + '%',
               color: TEXT_DIM,
-              font: { size: 10, family: FONT_FAMILY }
+              font: { size: 10, family: FONT }
             }
           }
         }
@@ -339,8 +344,8 @@ const Charts = (() => {
       {
         label: 'Upper bound',
         data: sorted.map(c => c.priceChangePctHigh),
-        backgroundColor: 'rgba(248, 113, 113, 0.18)',
-        borderColor: 'rgba(248, 113, 113, 0.35)',
+        backgroundColor: 'rgba(220, 38, 38, 0.12)',
+        borderColor: 'rgba(220, 38, 38, 0.3)',
         borderWidth: 1,
         borderRadius: 3
       },
@@ -355,8 +360,8 @@ const Charts = (() => {
       {
         label: 'Lower bound',
         data: sorted.map(c => c.priceChangePctLow),
-        backgroundColor: 'rgba(52, 211, 153, 0.18)',
-        borderColor: 'rgba(52, 211, 153, 0.35)',
+        backgroundColor: 'rgba(5, 150, 105, 0.12)',
+        borderColor: 'rgba(5, 150, 105, 0.3)',
         borderWidth: 1,
         borderRadius: 3
       }
@@ -390,15 +395,15 @@ const Charts = (() => {
           },
           y: {
             title: axisTitle('Amount ($)'),
-            ticks: { callback: v => formatDollars(v), color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } },
+            ticks: { callback: v => formatDollars(v), color: TEXT_DIM, font: { size: 10, family: FONT } },
             position: 'left'
           },
           y1: {
             title: axisTitle('Years to Save Deposit'),
             position: 'right',
             grid: { drawOnChartArea: false },
-            ticks: { color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } },
-            border: { color: 'rgba(38, 51, 84, 0.4)' }
+            ticks: { color: TEXT_DIM, font: { size: 10, family: FONT } },
+            border: { color: '#e5e7eb' }
           }
         }
       })
@@ -422,8 +427,8 @@ const Charts = (() => {
       {
         label: '20% Deposit Required',
         data: sweep.map(s => s.newDeposit),
-        borderColor: BLUE,
-        backgroundColor: BLUE_LIGHT,
+        borderColor: 'rgba(100, 116, 139, 0.7)',
+        backgroundColor: 'rgba(100, 116, 139, 0.04)',
         fill: false,
         tension: 0.35,
         borderWidth: 2,
@@ -469,7 +474,7 @@ const Charts = (() => {
             title: axisTitle('Share of New Lending (%)'),
             stacked: true,
             max: 100,
-            ticks: { callback: v => v + '%', color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } }
+            ticks: { callback: v => v + '%', color: TEXT_DIM, font: { size: 10, family: FONT } }
           }
         }
       })
@@ -501,7 +506,7 @@ const Charts = (() => {
           const inv = Math.max(0, investorBase - s.fhbShareChangePp);
           return Math.max(0, 100 - fhb - inv);
         }),
-        backgroundColor: GRAY,
+        backgroundColor: SLATE,
         borderRadius: 3
       }
     ];
@@ -529,7 +534,7 @@ const Charts = (() => {
           },
           y: {
             title: axisTitle('Additional Revenue ($B/year)'),
-            ticks: { callback: v => '$' + v + 'B', color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } }
+            ticks: { callback: v => '$' + v + 'B', color: TEXT_DIM, font: { size: 10, family: FONT } }
           }
         }
       })
@@ -542,8 +547,8 @@ const Charts = (() => {
       {
         label: 'CGT Reform Only',
         data: sweepNG.map(s => s.revenueGainBillions),
-        borderColor: BLUE,
-        backgroundColor: BLUE_LIGHT,
+        borderColor: TEAL,
+        backgroundColor: TEAL_LIGHT,
         fill: true,
         tension: 0.35,
         borderWidth: 2,
@@ -553,7 +558,7 @@ const Charts = (() => {
         label: 'CGT + Remove Negative Gearing',
         data: sweepNoNG.map(s => s.revenueGainBillions),
         borderColor: PURPLE,
-        backgroundColor: 'rgba(167, 139, 250, 0.1)',
+        backgroundColor: 'rgba(124, 58, 237, 0.06)',
         fill: true,
         tension: 0.35,
         borderDash: [5, 3],
@@ -587,14 +592,14 @@ const Charts = (() => {
           y: {
             title: axisTitle('Construction Impact (homes/yr)'),
             position: 'left',
-            ticks: { color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } }
+            ticks: { color: TEXT_DIM, font: { size: 10, family: FONT } }
           },
           y1: {
             title: axisTitle('Rent Impact ($/week)'),
             position: 'right',
             grid: { drawOnChartArea: false },
-            ticks: { callback: v => '$' + v.toFixed(2), color: TEXT_DIM, font: { size: 10, family: FONT_FAMILY } },
-            border: { color: 'rgba(38, 51, 84, 0.4)' }
+            ticks: { callback: v => '$' + v.toFixed(2), color: TEXT_DIM, font: { size: 10, family: FONT } },
+            border: { color: '#e5e7eb' }
           }
         }
       })
@@ -611,8 +616,8 @@ const Charts = (() => {
         type: 'bar',
         data: scenarios.map(s => s.constructionImpactAnnual),
         backgroundColor: scenarios.map(s => s.constructionImpactAnnual < 0
-          ? 'rgba(248, 113, 113, 0.5)' : 'rgba(52, 211, 153, 0.5)'),
-        borderRadius: 4,
+          ? 'rgba(220, 38, 38, 0.35)' : 'rgba(5, 150, 105, 0.35)'),
+        borderRadius: 3,
         yAxisID: 'y'
       },
       {
